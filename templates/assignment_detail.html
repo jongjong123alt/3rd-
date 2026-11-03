@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}{{ assignment.title }} · 과제 노트{% endblock %}
+{% block breadcrumb %}과제 상세{% endblock %}
+{% block content %}
+<section class="content">
+  <a class="back-link" href="{{ url_for('dashboard') }}">← 대시보드</a>
+  <div class="detail-heading"><h1>{{ assignment.title }}</h1><span class="status status-{{ assignment.status }}">{{ statuses[assignment.status] }}</span></div>
+  <dl class="details">
+    <div><dt>과목</dt><dd>{{ assignment.course or '미지정' }}</dd></div>
+    <div><dt>제출기한</dt><dd>{{ assignment.due_date or '미지정' }}</dd></div>
+    <div><dt>진행 상태</dt><dd>{{ statuses[assignment.status] }}</dd></div>
+  </dl>
+  <h2 class="description-title">과제 설명</h2>
+  <p class="description-body">{{ assignment.description or '등록된 설명이 없습니다.' }}</p>
+  <div class="form-actions"><a class="primary-button" href="{{ url_for('edit_assignment', assignment_id=assignment.id) }}">과제 수정</a>
+    <form method="post" action="{{ url_for('delete_assignment', assignment_id=assignment.id) }}" onsubmit="return confirm('이 과제를 삭제할까요? 삭제 후 복구할 수 없습니다.')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="danger-button">과제 삭제</button>
+    </form>
+  </div>
+</section>
+{% endblock %}
