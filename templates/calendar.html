@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}마감 달력 · 과제 노트{% endblock %}
+{% block breadcrumb %}마감 달력{% endblock %}
+{% block content %}
+<section class="content">
+  <div class="emoji">🗓️</div>
+  <h1>과제 마감 달력</h1>
+  <p class="intro">등록한 과제를 제출기한 기준으로 한눈에 확인하세요. 과제명을 누르면 상세 페이지로 이동합니다.</p>
+  <div class="calendar-toolbar">
+    <h2>{{ selected.year }}년 {{ selected.month }}월</h2>
+    <div class="calendar-controls">
+      {% if prev_month %}
+        <a class="secondary-button" href="{{ url_for('calendar_view', month=prev_month.strftime('%Y-%m')) }}" aria-label="이전 달">← 이전 달</a>
+      {% endif %}
+      <a class="secondary-button" href="{{ url_for('calendar_view') }}">이번 달</a>
+      {% if next_month %}
+        <a class="secondary-button" href="{{ url_for('calendar_view', month=next_month.strftime('%Y-%m')) }}" aria-label="다음 달">다음 달 →</a>
+      {% endif %}
+    </div>
+  </div>
+  <p class="calendar-count">이번 달 마감 과제 {{ assignment_count }}개 · 회색: 시작 전 / 노란색: 진행 중 / 초록색: 완료</p>
+  <div class="calendar-scroll">
+    <table class="deadline-calendar" aria-label="{{ selected.year }}년 {{ selected.month }}월 과제 마감 달력">
+      <thead><tr><th scope="col">일</th><th scope="col">월</th><th scope="col">화</th><th scope="col">수</th><th scope="col">목</th><th scope="col">금</th><th scope="col">토</th></tr></thead>
+      <tbody>
+      {% for week in weeks %}
+        <tr>
+          {% for cell in week %}
+          <td class="{{ 'outside-month' if not cell.in_month else '' }}">
+            {% if cell.in_month %}
+              <span class="calendar-day {{ 'today' if cell.is_today else '' }}" {% if cell.is_today %}aria-current="date"{% endif %}>{{ cell.day }}</span>
+              {% if cell.assignments %}
+              <div class="calendar-events">
+                {% for assignment in cell.assignments %}
+                  <a class="calendar-event status-{{ assignment.status }}" href="{{ url_for('assignment_detail', assignment_id=assignment.id) }}" title="{{ assignment.title }} · {{ statuses[assignment.status] }}">
+                    {{ assignment.title }}<small>{{ assignment.course or '과목 미지정' }} · {{ statuses[assignment.status] }}</small>
+                  </a>
+                {% endfor %}
+              </div>
+              {% endif %}
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="note"><strong>안내</strong><p>제출기한이 설정된 과제만 달력에 표시됩니다. 날짜가 없는 과제는 대시보드에서 확인하고 기한을 설정할 수 있어요.</p></div>
+</section>
+{% endblock %}

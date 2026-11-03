@@ -1,4 +1,5 @@
 from datetime import date
+import calendar
 from pathlib import Path
 import os
 import secrets
@@ -114,6 +115,74 @@ def create_app(test_config=None):
             "upcoming": sum(bool(a["due_date"]) and a["due_date"] >= today and a["status"] != "done" for a in assignments),
         }
         return render_template("dashboard.html", assignments=assignments, counts=counts)
+
+    @app.get("/calendar")
+    def calendar_view():
+        today = date.today()
+        month_value = request.args.get("month", "")
+        if month_value:
+            try:
+                if len(month_value) != 7 or month_value[4] != "-" or not (month_value[:4] + month_value[5:]).isdigit():
+                    raise ValueError
+                year, month = int(month_value[:4]), int(month_value[5:])
+                selected = date(year, month, 1)
+            except ValueError:
+                abort(400, description="올바른 연도와 월을 선택해 주세요.")
+        else:
+            selected = today.replace(day=1)
+
+        first = selected.isoformat()
+        if selected.year == 9999 and selected.month == 12:
+            next_month = None
+            after_last = None
+        else:
+            next_year = selected.year + (selected.month == 12)
+            next_number = selected.month % 12 + 1
+            next_month = date(next_year, next_number, 1)
+            after_last = next_month.isoformat()
+        if selected.year == 1 and selected.month == 1:
+            prev_month = None
+        else:
+            prev_year = selected.year - (selected.month == 1)
+            prev_number = 12 if selected.month == 1 else selected.month - 1
+            prev_month = date(prev_year, prev_number, 1)
+
+        with connect_db() as connection:
+            if after_last:
+                assignments = connection.execute(
+                    "SELECT id, title, course, due_date, status FROM assignments "
+                    "WHERE due_date >= ? AND due_date < ? ORDER BY due_date, id",
+                    (first, after_last),
+                ).fetchall()
+            else:
+                assignments = connection.execute(
+                    "SELECT id, title, course, due_date, status FROM assignments "
+                    "WHERE due_date >= ? AND due_date <= ? ORDER BY due_date, id",
+                    (first, "9999-12-31"),
+                ).fetchall()
+
+        by_day = {}
+        for assignment in assignments:
+            by_day.setdefault(assignment["due_date"], []).append(assignment)
+
+        weeks = []
+        for week in calendar.Calendar(firstweekday=6).monthdatescalendar(selected.year, selected.month):
+            cells = []
+            for day in week:
+                in_month = day.month == selected.month and day.year == selected.year
+                key = day.isoformat()
+                cells.append({
+                    "day": day.day, "in_month": in_month,
+                    "date": key if in_month else "",
+                    "is_today": in_month and day == today,
+                    "assignments": by_day.get(key, []) if in_month else [],
+                })
+            weeks.append(cells)
+        return render_template(
+            "calendar.html", selected=selected, weeks=weeks,
+            prev_month=prev_month, next_month=next_month,
+            assignment_count=len(assignments),
+        )
 
     @app.route("/assignments/new", methods=["GET", "POST"])
     def new_assignment():
