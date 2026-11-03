@@ -5,8 +5,11 @@ This module never writes analysis results to the database.
 from datetime import date
 import json
 import os
-import google.generativeai as genai
-from google.api_core.retry import Retry
+import truststore
+truststore.inject_into_ssl()
+
+from google import genai
+from google.genai import errors, types
 
 
 class GeminiAnalysisError(Exception):
@@ -72,33 +75,50 @@ def analyze_notice(notice):
         "<공지문>\n" + notice + "\n</공지문>"
     )
     try:
-        genai.configure(api_key=api_key, transport="rest")
-        model = genai.GenerativeModel(
-            model_name,
-            generation_config={"temperature": 0.1, "response_mime_type": "application/json", "max_output_tokens": 1024},
-        )
-        response = model.generate_content(
-            prompt,
-            request_options={
-                "timeout": 12,
-                "retry": Retry(predicate=lambda exc: False, deadline=12),
-            },
-        )
+        with genai.Client(
+            api_key=api_key,
+            http_options=types.HttpOptions(
+                timeout=20000,
+                retry_options=types.HttpRetryOptions(
+                    attempts=2,
+                    initial_delay=1.0,
+                    http_status_codes=[429, 500, 502, 503, 504],
+                ),
+            ),
+        ) as client:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    max_output_tokens=1024,
+                ),
+            )
         return _parse_response(response.text)
     except GeminiAnalysisError:
         raise
+    except errors.APIError as exc:
+        # Never expose raw SDK exceptions; they may contain request metadata.
+        if exc.code == 503:
+            message = "Gemini 서버에 요청이 몰리고 있습니다(503). 잠시 후 다시 시도해 주세요."
+        elif exc.code == 504:
+            message = "Gemini 서버의 응답 시간이 초과되었습니다(504). 잠시 후 다시 시도해 주세요."
+        elif exc.code == 429:
+            message = "Gemini 요청 한도를 초과했습니다(429). 잠시 후 다시 시도해 주세요."
+        elif exc.code in (401, 403):
+            message = "Gemini API 키 또는 사용 권한을 확인해 주세요."
+        elif exc.code == 404:
+            message = "Gemini 모델을 찾을 수 없습니다. .env의 GEMINI_MODEL을 확인해 주세요."
+        else:
+            message = "Gemini 분석 요청에 실패했습니다. 잠시 후 다시 시도해 주세요."
+        raise GeminiAnalysisError(message) from exc
     except Exception as exc:
-        # Never show exception details: SDK exceptions can contain request metadata.
         name = type(exc).__name__.lower()
         detail = str(exc).lower()
-        if "deadline" in detail or "timeout" in detail or "timed out" in detail:
-            message = "AI 분석 응답 시간이 초과되었습니다. 네트워크 연결을 확인한 뒤 다시 시도해 주세요."
-        elif "quota" in detail or "429" in detail or "resourceexhausted" in name:
-            message = "Gemini 요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요."
-        elif "certificate" in detail or "ssl" in detail:
+        if "certificate" in detail or "ssl" in detail:
             message = "SSL 인증서 검증에 실패했습니다. 네트워크 및 인증서 설정을 확인해 주세요."
-        elif "api key" in detail or "permission" in detail or "403" in detail or "401" in detail:
-            message = "Gemini API 키 또는 사용 권한을 확인해 주세요."
+        elif "timeout" in name or "timed out" in detail or "deadline" in detail:
+            message = "AI 분석 응답 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요."
         else:
-            message = "Gemini 분석 요청에 실패했습니다. 모델명과 연결 상태를 확인해 주세요."
+            message = "Gemini 분석 요청에 실패했습니다. 연결 상태를 확인해 주세요."
         raise GeminiAnalysisError(message) from exc

@@ -21,15 +21,33 @@ class GeminiTests(unittest.TestCase):
         data = {"title": "운영체제 과제", "course": "운영체제",
                 "due_date": "2026-11-20", "summary": "보고서 작성",
                 "deliverables": ["PDF"], "tasks": ["자료 조사"]}
-        fake_model = Mock()
-        fake_model.generate_content.return_value.text = json.dumps(data, ensure_ascii=False)
+        fake_client = Mock()
+        fake_client.models.generate_content.return_value.text = json.dumps(data, ensure_ascii=False)
+        context = Mock()
+        context.__enter__ = Mock(return_value=fake_client)
+        context.__exit__ = Mock(return_value=False)
         with patch.dict("os.environ", {"GEMINI_API_KEY": "test-key", "GEMINI_MODEL": "gemini-2.5-flash"}):
-            with patch("services.gemini_service.genai.configure") as configure:
-                with patch("services.gemini_service.genai.GenerativeModel", return_value=fake_model):
-                    result = analyze_notice("과제 공지")
-        configure.assert_called_once_with(api_key="test-key", transport="rest")\n        options = fake_model.generate_content.call_args.kwargs["request_options"]\n        self.assertEqual(options["timeout"], 12)\n        self.assertIsNotNone(options["retry"])
-        self.assertIn("과제 공지", fake_model.generate_content.call_args.args[0])
+            with patch("services.gemini_service.genai.Client", return_value=context) as client_factory:
+                result = analyze_notice("과제 공지")
+        options = client_factory.call_args.kwargs["http_options"]
+        self.assertEqual(options.timeout, 20000)
+        self.assertEqual(options.retry_options.attempts, 2)
+        self.assertEqual(fake_client.models.generate_content.call_args.kwargs["model"], "gemini-2.5-flash")
+        self.assertIn("과제 공지", fake_client.models.generate_content.call_args.kwargs["contents"])
         self.assertEqual(result["title"], "운영체제 과제")
+
+    def test_server_overload_message(self):
+        from google.genai import errors
+        for code, expected in ((503, "503"), (504, "504"), (429, "429")):
+            with self.subTest(code=code):
+                context = Mock()
+                context.__enter__ = Mock(side_effect=errors.ServerError(code, {"error": {"message": "temporary"}}))
+                context.__exit__ = Mock(return_value=False)
+                with patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}):
+                    with patch("services.gemini_service.genai.Client", return_value=context):
+                        with self.assertRaises(GeminiAnalysisError) as caught:
+                            analyze_notice("과제 공지")
+                self.assertIn(expected, str(caught.exception))
 
     def test_invalid_json(self):
         with self.assertRaises(GeminiAnalysisError):
