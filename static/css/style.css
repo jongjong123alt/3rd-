@@ -30,7 +30,9 @@
 @media(max-width:700px){.calendar-toolbar{align-items:flex-start}.calendar-toolbar h2{font-size:18px}}
 
 /* F-06 refinement: stable calendar height and expandable day list */
-.deadline-calendar tr{height:132px}
+.deadline-calendar thead tr{height:42px}
+.deadline-calendar thead th{height:42px;padding:10px 7px;vertical-align:middle}
+.deadline-calendar tbody tr{height:132px}
 .deadline-calendar td{height:132px;max-height:132px;overflow:hidden}
 .calendar-events{min-width:0}
 .calendar-event{min-width:0;max-width:100%;padding:7px 6px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
