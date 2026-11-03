@@ -1,0 +1,4 @@
+1. 프로젝트 폴더에서 터미널 실행
+2. python -m pip install -r requirements.txt
+3. python app.py
+4. http://127.0.0.1:5000 접속

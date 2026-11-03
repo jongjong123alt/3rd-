@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}과제 노트{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-icon">▦</span> 과제 노트 <span class="beta">BETA</span></div>
+      <div class="sidebar-label">워크스페이스</div>
+      <a class="nav active" href="{{ url_for('dashboard') }}">▤ <span>대시보드</span></a>
+      <div class="sidebar-bottom">AI 과제 분석 · 일정 관리<br><small>1단계 기본 화면</small></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><span>내 워크스페이스 / 대시보드</span><span class="stage">프로토타입</span></header>
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,19 @@
+# Credentials
+.env
+.env.*
+!.env.example
+# Local Python and SQLite
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+instance/
+*.db
+*.sqlite3
+# Editors and logs
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
