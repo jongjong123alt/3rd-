@@ -12,6 +12,47 @@
   </dl>
   <h2 class="description-title">과제 설명</h2>
   <p class="description-body">{{ assignment.description or '등록된 설명이 없습니다.' }}</p>
+  <section class="checklist-section" aria-labelledby="checklist-title">
+    <div class="section-head">
+      <h2 id="checklist-title">할 일 체크리스트</h2>
+      <span class="muted">{{ done_count }} / {{ checklist_items|length }} 완료</span>
+    </div>
+    {% if checklist_items %}
+      <div class="checklist-progress" role="progressbar" aria-valuenow="{{ done_count }}" aria-valuemin="0" aria-valuemax="{{ checklist_items|length }}">
+        <div style="width: {{ (done_count / checklist_items|length * 100)|round|int }}%"></div>
+      </div>
+      <ul class="checklist-list">
+        {% for item in checklist_items %}
+          <li class="checklist-row">
+            <form method="post" action="{{ url_for('toggle_checklist_item', assignment_id=assignment.id, item_id=item.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <button class="check-toggle" type="submit" aria-label="{{ '완료 취소' if item.is_done else '완료 표시' }}: {{ item.content }}">{{ '☑' if item.is_done else '☐' }}</button>
+            </form>
+            <span class="check-text {% if item.is_done %}checked{% endif %}">{{ item.content }}</span>
+            <details class="check-edit">
+              <summary>수정</summary>
+              <form method="post" action="{{ url_for('edit_checklist_item', assignment_id=assignment.id, item_id=item.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input name="content" aria-label="할 일 수정" maxlength="300" required value="{{ item.content }}">
+                <button type="submit" class="secondary-button">저장</button>
+              </form>
+            </details>
+            <form method="post" action="{{ url_for('delete_checklist_item', assignment_id=assignment.id, item_id=item.id) }}" onsubmit="return confirm('이 할 일을 삭제할까요?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <button type="submit" class="check-delete">삭제</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">아직 등록된 할 일이 없습니다.</p>
+    {% endif %}
+    <form class="check-add-form" method="post" action="{{ url_for('add_checklist_item', assignment_id=assignment.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input name="content" maxlength="300" required placeholder="새 할 일 입력" aria-label="새 할 일">
+      <button type="submit" class="secondary-button">+ 추가</button>
+    </form>
+  </section>
   <div class="form-actions"><a class="primary-button" href="{{ url_for('edit_assignment', assignment_id=assignment.id) }}">과제 수정</a>
     <form method="post" action="{{ url_for('delete_assignment', assignment_id=assignment.id) }}" onsubmit="return confirm('이 과제를 삭제할까요? 삭제 후 복구할 수 없습니다.')">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">

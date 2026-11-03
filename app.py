@@ -128,7 +128,17 @@ def create_app(test_config=None):
 
     @app.get("/assignments/<int:assignment_id>")
     def assignment_detail(assignment_id):
-        return render_template("assignment_detail.html", assignment=get_assignment(assignment_id))
+        assignment = get_assignment(assignment_id)
+        with connect_db() as connection:
+            items = connection.execute(
+                "SELECT * FROM checklist_items WHERE assignment_id = ? ORDER BY id",
+                (assignment_id,)
+            ).fetchall()
+        done_count = sum(item["is_done"] for item in items)
+        return render_template(
+            "assignment_detail.html", assignment=assignment,
+            checklist_items=items, done_count=done_count
+        )
 
     @app.route("/assignments/<int:assignment_id>/edit", methods=["GET", "POST"])
     def edit_assignment(assignment_id):
@@ -153,6 +163,63 @@ def create_app(test_config=None):
             connection.execute("DELETE FROM assignments WHERE id=?", (assignment_id,))
         flash("과제가 삭제되었습니다.", "success")
         return redirect(url_for("dashboard"))
+
+    @app.post("/assignments/<int:assignment_id>/checklist")
+    def add_checklist_item(assignment_id):
+        get_assignment(assignment_id)
+        content = request.form.get("content", "").strip()
+        if not content or len(content) > 300:
+            flash("할 일은 1~300자로 입력해 주세요.", "error")
+        else:
+            with connect_db() as connection:
+                connection.execute(
+                    "INSERT INTO checklist_items (assignment_id, content) VALUES (?, ?)",
+                    (assignment_id, content),
+                )
+            flash("할 일이 추가되었습니다.", "success")
+        return redirect(url_for("assignment_detail", assignment_id=assignment_id))
+
+    @app.post("/assignments/<int:assignment_id>/checklist/<int:item_id>/toggle")
+    def toggle_checklist_item(assignment_id, item_id):
+        get_assignment(assignment_id)
+        with connect_db() as connection:
+            cursor = connection.execute(
+                "UPDATE checklist_items SET is_done = CASE WHEN is_done = 0 THEN 1 ELSE 0 END "
+                "WHERE id = ? AND assignment_id = ?", (item_id, assignment_id)
+            )
+            if cursor.rowcount == 0:
+                abort(404)
+        return redirect(url_for("assignment_detail", assignment_id=assignment_id))
+
+    @app.post("/assignments/<int:assignment_id>/checklist/<int:item_id>/edit")
+    def edit_checklist_item(assignment_id, item_id):
+        get_assignment(assignment_id)
+        content = request.form.get("content", "").strip()
+        if not content or len(content) > 300:
+            flash("할 일은 1~300자로 입력해 주세요.", "error")
+            return redirect(url_for("assignment_detail", assignment_id=assignment_id))
+        with connect_db() as connection:
+            cursor = connection.execute(
+                "UPDATE checklist_items SET content = ? WHERE id = ? AND assignment_id = ?",
+                (content, item_id, assignment_id)
+            )
+            if cursor.rowcount == 0:
+                abort(404)
+        flash("할 일이 수정되었습니다.", "success")
+        return redirect(url_for("assignment_detail", assignment_id=assignment_id))
+
+    @app.post("/assignments/<int:assignment_id>/checklist/<int:item_id>/delete")
+    def delete_checklist_item(assignment_id, item_id):
+        get_assignment(assignment_id)
+        with connect_db() as connection:
+            cursor = connection.execute(
+                "DELETE FROM checklist_items WHERE id = ? AND assignment_id = ?",
+                (item_id, assignment_id)
+            )
+            if cursor.rowcount == 0:
+                abort(404)
+        flash("할 일이 삭제되었습니다.", "success")
+        return redirect(url_for("assignment_detail", assignment_id=assignment_id))
 
     @app.get("/health")
     def health():
