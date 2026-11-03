@@ -166,15 +166,15 @@ def create_app(test_config=None):
             by_day.setdefault(assignment["due_date"], []).append(assignment)
 
         weeks = []
-        for week in calendar.Calendar(firstweekday=6).monthdatescalendar(selected.year, selected.month):
+        for week in calendar.Calendar(firstweekday=6).monthdayscalendar(selected.year, selected.month):
             cells = []
-            for day in week:
-                in_month = day.month == selected.month and day.year == selected.year
-                key = day.isoformat()
+            for day_number in week:
+                in_month = day_number != 0
+                day = date(selected.year, selected.month, day_number) if in_month else None
+                key = day.isoformat() if day else ""
                 cells.append({
-                    "day": day.day, "in_month": in_month,
-                    "date": key if in_month else "",
-                    "is_today": in_month and day == today,
+                    "day": day_number, "in_month": in_month,
+                    "date": key, "is_today": day == today if day else False,
                     "assignments": by_day.get(key, []) if in_month else [],
                 })
             weeks.append(cells)
