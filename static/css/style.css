@@ -28,3 +28,23 @@
 .calendar-event.status-done{background:#e6f5e9;color:#28743e}
 .calendar-event small{display:block;font-size:10px;margin-top:3px;opacity:.8}
 @media(max-width:700px){.calendar-toolbar{align-items:flex-start}.calendar-toolbar h2{font-size:18px}}
+
+/* F-06 refinement: stable calendar height and expandable day list */
+.deadline-calendar tr{height:132px}
+.deadline-calendar td{height:132px;max-height:132px;overflow:hidden}
+.calendar-events{min-width:0}
+.calendar-event{min-width:0;max-width:100%;padding:7px 6px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.calendar-event-title{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.calendar-more{display:block;width:100%;min-width:0;border:0;border-radius:5px;background:transparent;padding:5px 6px;text-align:left;color:#626262;font:inherit;font-size:11px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.calendar-more:hover,.calendar-more:focus-visible{background:#f2f2f0;text-decoration:underline}
+.calendar-dialog{position:fixed;inset:0;margin:auto;border:1px solid #e7e7e5;border-radius:12px;background:#fff;width:min(440px,calc(100vw - 32px));max-height:min(70vh,650px);padding:22px;box-shadow:0 16px 48px #0002;color:#252525;overflow-y:auto}
+.calendar-dialog::backdrop{background:rgba(0,0,0,.36)}
+.calendar-dialog-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.calendar-dialog-head h3{font-size:17px;line-height:1.4;margin:0 0 7px}
+.calendar-dialog-head p{margin:0}
+.calendar-dialog-close{width:32px;height:32px;border:0;border-radius:6px;background:#f4f4f2;color:#555;cursor:pointer}
+.calendar-dialog-list{display:flex;flex-direction:column;gap:8px;margin-top:20px}
+.calendar-dialog-item{display:flex;flex-direction:column;gap:5px;text-decoration:none;border:1px solid #ececea;border-radius:7px;padding:12px;color:#252525;overflow-wrap:anywhere}
+.calendar-dialog-item:hover,.calendar-dialog-item:focus-visible{background:#f8f8f7;outline:2px solid #ececea}
+.calendar-dialog-item-title{font-size:13px;font-weight:600}
+.calendar-dialog-item-info{font-size:11px;color:#777}

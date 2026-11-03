@@ -31,11 +31,31 @@
               <span class="calendar-day {{ 'today' if cell.is_today else '' }}" {% if cell.is_today %}aria-current="date"{% endif %}>{{ cell.day }}</span>
               {% if cell.assignments %}
               <div class="calendar-events">
-                {% for assignment in cell.assignments %}
+                {% for assignment in cell.assignments[:2] %}
                   <a class="calendar-event status-{{ assignment.status }}" href="{{ url_for('assignment_detail', assignment_id=assignment.id) }}" title="{{ assignment.title }} · {{ statuses[assignment.status] }}">
-                    {{ assignment.title }}<small>{{ assignment.course or '과목 미지정' }} · {{ statuses[assignment.status] }}</small>
+                    <span class="calendar-event-title">{{ assignment.title }}</span>
                   </a>
                 {% endfor %}
+                {% if cell.assignments|length > 2 %}
+                  <button class="calendar-more" type="button" data-calendar-open="calendar-day-{{ cell.date }}" aria-label="{{ cell.date }} 마감 과제 {{ cell.assignments|length }}개 모두 보기">+{{ cell.assignments|length - 2 }}개 더보기</button>
+                  <dialog class="calendar-dialog" id="calendar-day-{{ cell.date }}" aria-labelledby="calendar-dialog-title-{{ cell.date }}">
+                    <div class="calendar-dialog-head">
+                      <div>
+                        <h3 id="calendar-dialog-title-{{ cell.date }}">{{ cell.date }} 마감 과제</h3>
+                        <p class="muted">전체 {{ cell.assignments|length }}개</p>
+                      </div>
+                      <form method="dialog"><button class="calendar-dialog-close" type="submit" aria-label="목록 닫기">✕</button></form>
+                    </div>
+                    <div class="calendar-dialog-list">
+                      {% for assignment in cell.assignments %}
+                        <a class="calendar-dialog-item" href="{{ url_for('assignment_detail', assignment_id=assignment.id) }}">
+                          <span class="calendar-dialog-item-title">{{ assignment.title }}</span>
+                          <span class="calendar-dialog-item-info">{{ assignment.course or '과목 미지정' }} · {{ statuses[assignment.status] }}</span>
+                        </a>
+                      {% endfor %}
+                    </div>
+                  </dialog>
+                {% endif %}
               </div>
               {% endif %}
             {% endif %}
@@ -48,4 +68,17 @@
   </div>
   <div class="note"><strong>안내</strong><p>제출기한이 설정된 과제만 달력에 표시됩니다. 날짜가 없는 과제는 대시보드에서 확인하고 기한을 설정할 수 있어요.</p></div>
 </section>
+<script>
+  document.querySelectorAll('[data-calendar-open]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const dialog = document.getElementById(button.dataset.calendarOpen);
+      if (dialog && !dialog.open) dialog.showModal();
+    });
+  });
+  document.querySelectorAll('.calendar-dialog').forEach((dialog) => {
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+  });
+</script>
 {% endblock %}

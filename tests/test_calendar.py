@@ -44,6 +44,28 @@ class CalendarTests(unittest.TestCase):
         self.assertIn("status-done", body)
         self.assertIn("/assignments/", body)
 
+    def test_more_button_for_three_assignments_on_same_day(self):
+        with project.connect_db() as db:
+            db.execute(
+                "INSERT INTO assignments (title, course, due_date, status) "
+                "VALUES (?, ?, ?, ?)",
+                ("아주 긴 제목 " * 50, "AI", "2026-11-12", "todo"),
+            )
+        body = self.client.get("/calendar?month=2026-11").get_data(as_text=True)
+        self.assertIn("+1개 더보기", body)
+        self.assertIn('data-calendar-open="calendar-day-2026-11-12"', body)
+        self.assertIn('<dialog class="calendar-dialog" id="calendar-day-2026-11-12"', body)
+        self.assertIn("전체 3개", body)
+        self.assertIn("calendar-event-title", body)
+        self.assertIn("아주 긴 제목", body)
+        self.assertIn("운영체제 보고서", body)
+        self.assertIn("발표 준비", body)
+
+    def test_two_assignments_do_not_show_more(self):
+        body = self.client.get("/calendar?month=2026-11").get_data(as_text=True)
+        self.assertNotIn('data-calendar-open="calendar-day-2026-11-12"', body)
+        self.assertNotIn("+1개 더보기", body)
+
     def test_month_navigation_and_invalid_month(self):
         body = self.client.get("/calendar?month=2026-11").get_data(as_text=True)
         self.assertIn("month=2026-10", body)
