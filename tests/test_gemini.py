@@ -34,6 +34,10 @@ class GeminiTests(unittest.TestCase):
         self.assertEqual(options.retry_options.attempts, 2)
         self.assertEqual(fake_client.models.generate_content.call_args.kwargs["model"], "gemini-2.5-flash")
         self.assertIn("과제 공지", fake_client.models.generate_content.call_args.kwargs["contents"])
+        config = fake_client.models.generate_content.call_args.kwargs["config"]
+        self.assertEqual(config.max_output_tokens, 4096)
+        self.assertEqual(config.response_mime_type, "application/json")
+        self.assertEqual(config.response_json_schema["type"], "object")
         self.assertEqual(result["title"], "운영체제 과제")
 
     def test_server_overload_message(self):
@@ -48,6 +52,21 @@ class GeminiTests(unittest.TestCase):
                         with self.assertRaises(GeminiAnalysisError) as caught:
                             analyze_notice("과제 공지")
                 self.assertIn(expected, str(caught.exception))
+
+    def test_truncated_response_message(self):
+        response = Mock()
+        response.text = '{"title":"미완성'
+        response.candidates = [Mock(finish_reason="MAX_TOKENS")]
+        fake_client = Mock()
+        fake_client.models.generate_content.return_value = response
+        context = Mock()
+        context.__enter__ = Mock(return_value=fake_client)
+        context.__exit__ = Mock(return_value=False)
+        with patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}):
+            with patch("services.gemini_service.genai.Client", return_value=context):
+                with self.assertRaises(GeminiAnalysisError) as caught:
+                    analyze_notice("과제 공지")
+        self.assertIn("길이 제한", str(caught.exception))
 
     def test_invalid_json(self):
         with self.assertRaises(GeminiAnalysisError):

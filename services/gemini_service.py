@@ -91,9 +91,26 @@ def analyze_notice(notice):
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
-                    max_output_tokens=1024,
+                    response_json_schema={
+                        "type": "object",
+                        "properties": {
+                            "title": {"type": "string"},
+                            "course": {"type": "string"},
+                            "due_date": {"type": "string"},
+                            "summary": {"type": "string"},
+                            "deliverables": {"type": "array", "items": {"type": "string"}},
+                            "tasks": {"type": "array", "items": {"type": "string"}},
+                        },
+                        "required": ["title", "course", "due_date", "summary", "deliverables", "tasks"],
+                    },
+                    max_output_tokens=4096,
                 ),
             )
+        candidates = getattr(response, "candidates", None)
+        if candidates:
+            reason = getattr(candidates[0], "finish_reason", None)
+            if reason is not None and str(reason).upper().endswith("MAX_TOKENS"):
+                raise GeminiAnalysisError("AI 응답이 길이 제한으로 잘렸습니다. 공지문을 줄여 다시 시도해 주세요.")
         return _parse_response(response.text)
     except GeminiAnalysisError:
         raise
