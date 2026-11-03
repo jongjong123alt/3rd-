@@ -5,6 +5,7 @@ import secrets
 import sqlite3
 
 from flask import Flask, abort, flash, jsonify, redirect, render_template, request, session, url_for
+from services.gemini_service import analyze_notice, GeminiAnalysisError
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "instance" / "assignments.db"
@@ -220,6 +221,20 @@ def create_app(test_config=None):
                 abort(404)
         flash("할 일이 삭제되었습니다.", "success")
         return redirect(url_for("assignment_detail", assignment_id=assignment_id))
+
+    @app.route("/ai/analyze", methods=["GET", "POST"])
+    def ai_analyze():
+        if request.method == "GET":
+            return render_template("ai_analyze.html", notice="", result=None, error=None)
+        notice = request.form.get("notice", "").strip()
+        if not notice or len(notice) > 10000:
+            return render_template("ai_analyze.html", notice=notice[:10000], result=None,
+                                   error="공지문은 1~10,000자로 입력해 주세요."), 400
+        try:
+            result = analyze_notice(notice)
+        except GeminiAnalysisError as exc:
+            return render_template("ai_analyze.html", notice=notice, result=None, error=str(exc)), 502
+        return render_template("ai_analyze.html", notice=notice, result=result, error=None)
 
     @app.get("/health")
     def health():

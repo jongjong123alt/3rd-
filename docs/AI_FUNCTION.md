@@ -7,3 +7,11 @@ Gemini는 사용자가 입력한 자유형식 과제 공지문에서 과제명, 
 - AI 결과는 사용자 확인 후 저장
 - API 키는 서버 환경변수로 관리
 - 실제 Gemini 연동 및 테스트는 아직 미구현
+
+
+## F-04 구현 상태
+- POST /ai/analyze: 최대 10,000자 공지문 분석, 결과 화면 표시
+- Gemini REST generateContent, JSON 스키마 응답 요청
+- GEMINI_API_KEY 환경변수 필수; 기본 모델 gemini-2.5-flash (GEMINI_MODEL로 변경 가능)
+- AI 결과는 미리보기이며 DB에 저장하지 않음 (F-05 예정)
+- 실 API 호출 검증은 사용자 환경에서 진행 예정
