@@ -5,8 +5,8 @@ This module never writes analysis results to the database.
 from datetime import date
 import json
 import os
-
 import google.generativeai as genai
+from google.api_core.retry import Retry
 
 
 class GeminiAnalysisError(Exception):
@@ -72,12 +72,12 @@ def analyze_notice(notice):
         "<공지문>\n" + notice + "\n</공지문>"
     )
     try:
-        genai.configure(api_key=api_key)
+        genai.configure(api_key=api_key, transport="rest")
         model = genai.GenerativeModel(
             model_name,
-            generation_config={"temperature": 0.1, "response_mime_type": "application/json"},
+            generation_config={"temperature": 0.1, "response_mime_type": "application/json", "max_output_tokens": 1024},
         )
-        response = model.generate_content(prompt, request_options={"timeout": 30})
+        response = model.generate_content(\n            prompt,\n            request_options={\n                "timeout": 12,\n                "retry": Retry(predicate=lambda exc: False, deadline=12),\n            },\n        )
         return _parse_response(response.text)
     except GeminiAnalysisError:
         raise
@@ -85,7 +85,7 @@ def analyze_notice(notice):
         # Never show exception details: SDK exceptions can contain request metadata.
         name = type(exc).__name__.lower()
         detail = str(exc).lower()
-        if "quota" in detail or "429" in detail or "resourceexhausted" in name:
+        if "deadline" in detail or "timeout" in detail or "timed out" in detail:\n            message = "AI 분석 응답 시간이 초과되었습니다. 네트워크 연결을 확인한 뒤 다시 시도해 주세요."\n        elif "quota" in detail or "429" in detail or "resourceexhausted" in name:
             message = "Gemini 요청 한도를 초과했습니다. 잠시 후 다시 시도해 주세요."
         elif "certificate" in detail or "ssl" in detail:
             message = "SSL 인증서 검증에 실패했습니다. 네트워크 및 인증서 설정을 확인해 주세요."

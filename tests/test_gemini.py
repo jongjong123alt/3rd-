@@ -27,7 +27,7 @@ class GeminiTests(unittest.TestCase):
             with patch("services.gemini_service.genai.configure") as configure:
                 with patch("services.gemini_service.genai.GenerativeModel", return_value=fake_model):
                     result = analyze_notice("과제 공지")
-        configure.assert_called_once_with(api_key="test-key")
+        configure.assert_called_once_with(api_key="test-key", transport="rest")\n        options = fake_model.generate_content.call_args.kwargs["request_options"]\n        self.assertEqual(options["timeout"], 12)\n        self.assertIsNotNone(options["retry"])
         self.assertIn("과제 공지", fake_model.generate_content.call_args.args[0])
         self.assertEqual(result["title"], "운영체제 과제")
 
