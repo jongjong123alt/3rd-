@@ -47,3 +47,13 @@ AI 생성 코드 그대로 제출하지 말고, 본인이 확인·수정한 사�
 - [ ] 잘못된 JSON·네트워크 오류 안내
 - [ ] API 키가 GitHub에 노출되지 않음
 - [ ] 분석만으로 SQLite에 자동 저장되지 않음
+
+
+## F-04 교수님 안내 4장 기준 SDK 변경 (2026-11-03)
+- 기존 urllib REST 직접 호출 → google-generativeai의 model.generate_content(prompt)로 변경
+- python-dotenv load_dotenv()로 .env 로컬 키 설정 추가
+- response.text JSON 파싱·입력 검증 유지
+- 기존 UI와 F-01~F-03 기능 변경 없음
+- [ ] 자동 테스트 실행 확인
+- [ ] Windows에서 실제 Gemini API 호출 확인
+- [ ] 기존 SSL 인증서 오류 재검증

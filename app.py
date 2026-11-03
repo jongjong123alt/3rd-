@@ -5,6 +5,9 @@ import secrets
 import sqlite3
 
 from flask import Flask, abort, flash, jsonify, redirect, render_template, request, session, url_for
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parent / '.env')
 from services.gemini_service import analyze_notice, GeminiAnalysisError
 
 BASE_DIR = Path(__file__).resolve().parent
