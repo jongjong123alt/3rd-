@@ -42,7 +42,29 @@
     {% if result.deliverables %}<ul>{% for item in result.deliverables %}<li>{{ item }}</li>{% endfor %}</ul>{% else %}<p class="muted">명시된 제출물이 없습니다.</p>{% endif %}
     <h3>해야 할 일</h3>
     {% if result.tasks %}<ul>{% for item in result.tasks %}<li>{{ item }}</li>{% endfor %}</ul>{% else %}<p class="muted">추출된 항목이 없습니다.</p>{% endif %}
-    <div class="note"><strong>확인 안내</strong><p>AI가 날짜나 요구사항을 잘못 해석할 수 있어요. 원문을 확인한 후 수동으로 과제를 등록하세요. AI 결과를 수정하고 저장하는 기능은 F-05에서 구현합니다.</p></div>
+    <div class="note"><strong>저장 전 확인</strong><p>분석 결과는 틀릴 수 있으니 원문과 대조해 수정해 주세요. 저장 버튼을 누르기 전에는 과제가 등록되지 않습니다.</p></div>
+    {% if save_errors %}<div class="form-errors" role="alert">{% for message in save_errors %}<p>{{ message }}</p>{% endfor %}</div>{% endif %}
+    <h3>분석 결과 수정 및 저장</h3>
+    <form class="assignment-form" id="ai-save-form" method="post" action="{{ url_for('ai_save') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label for="ai-title">과제명 <span class="required">*</span></label>
+      <input id="ai-title" name="title" maxlength="120" required value="{{ result.title }}">
+      <label for="ai-course">과목명</label>
+      <input id="ai-course" name="course" maxlength="100" value="{{ result.course }}">
+      <label for="ai-due">제출기한 (불확실하면 비워 두세요)</label>
+      <input id="ai-due" name="due_date" type="date" value="{{ result.due_date }}">
+      <label for="ai-summary">요약</label>
+      <textarea id="ai-summary" name="summary" maxlength="2000" rows="4">{{ result.summary }}</textarea>
+      <label for="ai-deliverables">필수 제출물 (한 줄에 한 항목)</label>
+      <textarea id="ai-deliverables" name="deliverables" maxlength="10000" rows="4">{{ result.deliverables|join('\n') }}</textarea>
+      <label for="ai-tasks">체크리스트 (한 줄에 한 항목)</label>
+      <textarea id="ai-tasks" name="tasks" maxlength="10000" rows="5">{{ result.tasks|join('\n') }}</textarea>
+      <p class="muted">할 일은 최대 30개, 항목당 300자까지 저장할 수 있습니다.</p>
+      <div class="form-actions">
+        <button class="primary-button" id="ai-save-button" type="submit">✓ 확인 후 과제로 저장</button>
+        <a class="secondary-button" href="{{ url_for('dashboard') }}">취소</a>
+      </div>
+    </form>
   </section>
   {% endif %}
 </section>

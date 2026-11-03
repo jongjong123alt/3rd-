@@ -239,6 +239,50 @@ def create_app(test_config=None):
             return render_template("ai_analyze.html", notice=notice, result=None, error=str(exc)), 502
         return render_template("ai_analyze.html", notice=notice, result=result, error=None)
 
+    @app.post("/ai/save")
+    def ai_save():
+        # Store only the user-reviewed fields; F-04 analysis never writes to the DB.
+        fields = {key: request.form.get(key, "").strip()
+                  for key in ("title", "course", "due_date", "summary")}
+        deliverables_raw = request.form.get("deliverables", "")
+        tasks_raw = request.form.get("tasks", "")
+        deliverables = [x.strip() for x in deliverables_raw.splitlines() if x.strip()]
+        tasks = [x.strip() for x in tasks_raw.splitlines() if x.strip()]
+        description = "\n\n".join(filter(None, [
+            fields["summary"],
+            "필수 제출물\n" + "\n".join("- " + x for x in deliverables) if deliverables else "",
+        ]))
+        values, errors = validate_form({
+            **fields, "description": description, "status": "todo"
+        })
+        if len(fields["summary"]) > 2000:
+            errors.append("요약은 2,000자 이내로 입력해 주세요.")
+        if len(deliverables) > 30 or any(len(x) > 300 for x in deliverables):
+            errors.append("제출물은 최대 30개, 항목당 300자 이내로 입력해 주세요.")
+        if len(tasks) > 30 or any(len(x) > 300 for x in tasks):
+            errors.append("할 일은 최대 30개, 항목당 300자 이내로 입력해 주세요.")
+        if len(deliverables_raw) > 10000 or len(tasks_raw) > 10000:
+            errors.append("제출물과 할 일 입력은 각각 10,000자 이내로 작성해 주세요.")
+        if errors:
+            draft = {**fields, "deliverables": deliverables, "tasks": tasks}
+            return render_template("ai_analyze.html", notice="", result=draft,
+                                   error=None, save_errors=errors), 400
+
+        with connect_db() as connection:
+            cursor = connection.execute(
+                "INSERT INTO assignments (title, course, description, due_date, status) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (values["title"], values["course"], values["description"],
+                 values["due_date"] or None, "todo"),
+            )
+            assignment_id = cursor.lastrowid
+            connection.executemany(
+                "INSERT INTO checklist_items (assignment_id, content) VALUES (?, ?)",
+                [(assignment_id, item) for item in tasks],
+            )
+        flash("검토한 AI 분석 결과가 과제와 체크리스트에 저장되었습니다.", "success")
+        return redirect(url_for("assignment_detail", assignment_id=assignment_id))
+
     @app.get("/health")
     def health():
         return jsonify(status="ok")
