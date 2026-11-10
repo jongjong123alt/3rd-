@@ -147,6 +147,36 @@ def create_app(test_config=None):
             "doing": sum(a["status"] == "doing" for a in assignments),
             "upcoming": sum(bool(a["due_date"]) and a["due_date"] >= today and a["status"] != "done" for a in assignments),
         }
+        # F-12: statistics are based on all assignments, regardless of active filters.
+        status_counts = {key: sum(a["status"] == key for a in assignments) for key in STATUSES}
+        status_chart = [
+            {"key": key, "label": label, "count": status_counts[key],
+             "percent": round(status_counts[key] * 100 / len(assignments)) if assignments else 0}
+            for key, label in STATUSES.items()
+        ]
+        course_counts = {}
+        for assignment in assignments:
+            course = assignment["course"] or "과목 미지정"
+            course_counts[course] = course_counts.get(course, 0) + 1
+        popular_courses = sorted(course_counts.items(), key=lambda pair: (-pair[1], pair[0]))[:5]
+        course_max = max((count for _, count in popular_courses), default=0)
+        course_chart = [
+            {"name": course, "count": count, "percent": round(count * 100 / course_max)}
+            for course, count in popular_courses
+        ]
+        with connect_db() as connection:
+            checklist_stats = connection.execute(
+                "SELECT COUNT(*) AS total, COALESCE(SUM(is_done), 0) AS done FROM checklist_items"
+            ).fetchone()
+        checklist_total = checklist_stats["total"]
+        checklist_done = checklist_stats["done"]
+        insights = {
+            "overdue": sum(bool(a["due_date"]) and a["due_date"] < today and a["status"] != "done" for a in assignments),
+            "done": status_counts["done"],
+            "checklist_done": checklist_done,
+            "checklist_total": checklist_total,
+            "checklist_percent": round(checklist_done * 100 / checklist_total) if checklist_total else 0,
+        }
         # F-07: keep summary counts global; filter only the displayed list.
         query = request.args.get("q", "").strip()[:120]
         status_filter = request.args.get("status", "all")
@@ -186,6 +216,7 @@ def create_app(test_config=None):
             visible = sorted(visible, key=lambda a: -a["id"])
         return render_template(
             "dashboard.html", assignments=visible, counts=counts,
+            status_chart=status_chart, course_chart=course_chart, insights=insights,
             filters={"q": query, "status": status_filter, "deadline": deadline_filter,
                      "priority": priority_filter, "sort": sort_by},
             filtered_count=len(visible),

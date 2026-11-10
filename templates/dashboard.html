@@ -10,6 +10,42 @@
     <div class="stat"><span>진행 중</span><strong>{{ counts.doing }}</strong><small>작업 중인 과제</small></div>
     <div class="stat"><span>마감 예정</span><strong>{{ counts.upcoming }}</strong><small>기한이 남은 미완료 과제</small></div>
   </div>
+  <section class="dashboard-insights" aria-labelledby="insights-title">
+    <div class="section-head"><h2 id="insights-title">과제 현황 분석</h2><span class="muted">전체 과제 기준</span></div>
+    <div class="insight-grid">
+      <div class="insight-panel">
+        <h3>진행 상태별 분포</h3>
+        {% for item in status_chart %}
+          <div class="insight-bar-row">
+            <div class="insight-bar-label"><span>{{ item.label }}</span><strong>{{ item.count }}개 ({{ item.percent }}%)</strong></div>
+            <div class="insight-track" role="img" aria-label="{{ item.label }} {{ item.count }}개, {{ item.percent }}퍼센트">
+              <div class="insight-fill insight-{{ item.key }}" style="width:{{ item.percent }}%"></div>
+            </div>
+          </div>
+        {% endfor %}
+        <p class="insight-footnote">완료 {{ insights.done }}개 · 마감 지난 미완료 과제 {{ insights.overdue }}개</p>
+      </div>
+      <div class="insight-panel">
+        <h3>과목별 과제 수 (상위 5개)</h3>
+        {% if course_chart %}
+          {% for item in course_chart %}
+            <div class="insight-bar-row">
+              <div class="insight-bar-label"><span class="insight-course-name" title="{{ item.name }}">{{ item.name }}</span><strong>{{ item.count }}개</strong></div>
+              <div class="insight-track" role="img" aria-label="{{ item.name }} {{ item.count }}개">
+                <div class="insight-fill insight-course" style="width:{{ item.percent }}%"></div>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p class="muted">등록된 과제가 없습니다.</p>
+        {% endif %}
+      </div>
+    </div>
+    <div class="insight-checklist">
+      <div><strong>전체 체크리스트 진행률</strong><span>{{ insights.checklist_done }} / {{ insights.checklist_total }} 완료 · {{ insights.checklist_percent }}%</span></div>
+      <div class="insight-track" role="progressbar" aria-label="체크리스트 전체 완료율" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ insights.checklist_percent }}"><div class="insight-fill insight-checklist-fill" style="width:{{ insights.checklist_percent }}%"></div></div>
+    </div>
+  </section>
   <div class="section-head"><h2>과제 목록 <span class="muted">{{ counts.total }}개</span></h2><a class="primary-button" href="{{ url_for('new_assignment') }}">+ 새 과제</a></div>
   <form class="dashboard-filters" method="get" action="{{ url_for('dashboard') }}" role="search" aria-label="과제 검색 및 필터">
     <label class="dashboard-filter-field dashboard-search-field" for="dashboard-query">

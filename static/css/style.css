@@ -86,3 +86,25 @@
 .note-entry-actions form{margin:0}
 .note-edit-form{display:flex;flex-direction:column;gap:9px;margin-top:10px!important}
 .note-edit-form select,.note-edit-form textarea{width:100%;max-width:640px;border:1px solid #ddd;border-radius:6px;padding:9px;font:inherit}
+
+/* F-12: compact, accessible dashboard analytics */
+.dashboard-insights{margin-top:32px}
+.dashboard-insights .section-head{margin:24px 0 14px}
+.insight-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.insight-panel,.insight-checklist{border:1px solid #eaeae8;border-radius:8px;padding:18px}
+.insight-panel h3{font-size:14px;margin:0 0 20px}
+.insight-bar-row{margin:0 0 16px}
+.insight-bar-label{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;margin-bottom:7px;color:#666}
+.insight-bar-label strong{font-size:12px;color:#444;white-space:nowrap}
+.insight-course-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.insight-track{width:100%;height:8px;border-radius:5px;background:#f0f0ef;overflow:hidden}
+.insight-fill{height:100%;border-radius:5px;background:#8c9cb6}
+.insight-todo{background:#b3b3b3}
+.insight-doing{background:#dfae55}
+.insight-done,.insight-checklist-fill{background:#65a880}
+.insight-course{background:#859ab2}
+.insight-footnote{font-size:12px;color:#777;margin:20px 0 0}
+.insight-checklist{margin-top:15px}
+.insight-checklist>div:first-child{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:13px}
+.insight-checklist span{color:#777;font-size:12px}
+@media(max-width:700px){.insight-grid{grid-template-columns:1fr}.insight-checklist>div:first-child{flex-wrap:wrap}}
