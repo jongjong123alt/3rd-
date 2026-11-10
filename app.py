@@ -14,6 +14,21 @@ from services.gemini_service import analyze_notice, GeminiAnalysisError
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "instance" / "assignments.db"
 STATUSES = {"todo": "시작 전", "doing": "진행 중", "done": "완료"}
+PRIORITIES = {"high": "높음", "medium": "보통", "low": "낮음"}
+
+def deadline_badge(due_date, status):
+    if not due_date or status == "done":
+        return None
+    try:
+        days = (date.fromisoformat(due_date) - date.today()).days
+    except ValueError:
+        return None
+    if days < 0:
+        return {"label": f"D+{-days}", "kind": "overdue"}
+    if days == 0:
+        return {"label": "D-DAY", "kind": "today"}
+    return {"label": f"D-{days}", "kind": "soon" if days <= 3 else "normal"}
+
 
 
 def connect_db():
@@ -35,6 +50,9 @@ def init_db():
             status TEXT NOT NULL DEFAULT 'todo' CHECK(status IN ('todo','doing','done')),
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         )""")
+        columns = {row["name"] for row in connection.execute("PRAGMA table_info(assignments)")}
+        if "priority" not in columns:
+            connection.execute("ALTER TABLE assignments ADD COLUMN priority TEXT NOT NULL DEFAULT 'medium'")
         connection.execute("""CREATE TABLE IF NOT EXISTS checklist_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             assignment_id INTEGER NOT NULL,
@@ -61,6 +79,7 @@ def validate_form(form):
         "description": form.get("description", "").strip(),
         "due_date": form.get("due_date", "").strip(),
         "status": form.get("status", "todo").strip(),
+        "priority": form.get("priority", "medium").strip(),
     }
     errors = []
     if not values["title"] or len(values["title"]) > 120:
@@ -71,6 +90,8 @@ def validate_form(form):
         errors.append("설명은 5,000자 이내로 입력해 주세요.")
     if values["status"] not in STATUSES:
         errors.append("진행 상태를 다시 선택해 주세요.")
+    if values["priority"] not in PRIORITIES:
+        errors.append("우선순위를 다시 선택해 주세요.")
     if values["due_date"]:
         try:
             parsed = date.fromisoformat(values["due_date"])
@@ -100,7 +121,8 @@ def create_app(test_config=None):
     def inject_globals():
         if "csrf_token" not in session:
             session["csrf_token"] = secrets.token_urlsafe(32)
-        return {"csrf_token": session["csrf_token"], "statuses": STATUSES}
+        return {"csrf_token": session["csrf_token"], "statuses": STATUSES,
+                "priorities": PRIORITIES, "deadline_badge": deadline_badge}
 
     @app.get("/")
     def dashboard():
@@ -118,6 +140,12 @@ def create_app(test_config=None):
         query = request.args.get("q", "").strip()[:120]
         status_filter = request.args.get("status", "all")
         deadline_filter = request.args.get("deadline", "all")
+        priority_filter = request.args.get("priority", "all")
+        sort_by = request.args.get("sort", "due")
+        if priority_filter not in ("all", "high", "medium", "low"):
+            priority_filter = "all"
+        if sort_by not in ("due", "priority", "recent"):
+            sort_by = "due"
         if status_filter not in ("all", "todo", "doing", "done"):
             status_filter = "all"
         if deadline_filter not in ("all", "overdue", "week", "no_due"):
@@ -131,6 +159,8 @@ def create_app(test_config=None):
             )]
         if status_filter != "all":
             visible = [a for a in visible if a["status"] == status_filter]
+        if priority_filter != "all":
+            visible = [a for a in visible if a["priority"] == priority_filter]
         if deadline_filter == "overdue":
             visible = [a for a in visible if a["due_date"] and a["due_date"] < today and a["status"] != "done"]
         elif deadline_filter == "week":
@@ -138,11 +168,17 @@ def create_app(test_config=None):
             visible = [a for a in visible if a["due_date"] and today <= a["due_date"] <= end and a["status"] != "done"]
         elif deadline_filter == "no_due":
             visible = [a for a in visible if not a["due_date"]]
+        if sort_by == "priority":
+            rank = {"high": 0, "medium": 1, "low": 2}
+            visible = sorted(visible, key=lambda a: (rank.get(a["priority"], 1), a["due_date"] or "9999-12-31", -a["id"]))
+        elif sort_by == "recent":
+            visible = sorted(visible, key=lambda a: -a["id"])
         return render_template(
             "dashboard.html", assignments=visible, counts=counts,
-            filters={"q": query, "status": status_filter, "deadline": deadline_filter},
+            filters={"q": query, "status": status_filter, "deadline": deadline_filter,
+                     "priority": priority_filter, "sort": sort_by},
             filtered_count=len(visible),
-            filters_active=bool(query or status_filter != "all" or deadline_filter != "all"),
+            filters_active=bool(query or status_filter != "all" or deadline_filter != "all" or priority_filter != "all"),
         )
 
     @app.get("/calendar")
@@ -220,8 +256,8 @@ def create_app(test_config=None):
             if not errors:
                 with connect_db() as connection:
                     connection.execute(
-                        "INSERT INTO assignments (title, course, description, due_date, status) VALUES (?, ?, ?, ?, ?)",
-                        (values["title"], values["course"], values["description"], values["due_date"] or None, values["status"]),
+                        "INSERT INTO assignments (title, course, description, due_date, status, priority) VALUES (?, ?, ?, ?, ?, ?)",
+                        (values["title"], values["course"], values["description"], values["due_date"] or None, values["status"], values["priority"]),
                     )
                 flash("과제가 등록되었습니다.", "success")
                 return redirect(url_for("dashboard"))
@@ -250,8 +286,8 @@ def create_app(test_config=None):
             if not errors:
                 with connect_db() as connection:
                     connection.execute(
-                        "UPDATE assignments SET title=?, course=?, description=?, due_date=?, status=? WHERE id=?",
-                        (values["title"], values["course"], values["description"], values["due_date"] or None, values["status"], assignment_id),
+                        "UPDATE assignments SET title=?, course=?, description=?, due_date=?, status=?, priority=? WHERE id=?",
+                        (values["title"], values["course"], values["description"], values["due_date"] or None, values["status"], values["priority"], assignment_id),
                     )
                 flash("과제가 수정되었습니다.", "success")
                 return redirect(url_for("assignment_detail", assignment_id=assignment_id))

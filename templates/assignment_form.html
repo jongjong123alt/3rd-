@@ -17,6 +17,8 @@
     <input id="due_date" name="due_date" type="date" value="{{ values.get('due_date') or '' }}">
     <label for="status">진행 상태</label>
     <select id="status" name="status">{% for key, label in statuses.items() %}<option value="{{ key }}" {% if (values.get('status') or 'todo') == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+    <label for="priority">우선순위</label>
+    <select id="priority" name="priority">{% for key, label in priorities.items() %}<option value="{{ key }}" {% if (values.get('priority') or 'medium') == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
     <label for="description">과제 설명</label>
     <textarea id="description" name="description" maxlength="5000" rows="6" placeholder="과제 내용이나 제출 조건을 적어주세요.">{{ values.get('description') or '' }}</textarea>
     <div class="form-actions"><a class="secondary-button" href="{{ url_for('assignment_detail', assignment_id=assignment.id) if editing else url_for('dashboard') }}">취소</a><button class="primary-button" type="submit">{{ '수정 저장' if editing else '과제 등록' }}</button></div>

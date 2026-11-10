@@ -59,3 +59,15 @@
 .dashboard-filter-field input:focus-visible,.dashboard-filter-field select:focus-visible{outline:2px solid #d6d6d6}
 .dashboard-filters .primary-button,.dashboard-filters .secondary-button{min-height:39px;white-space:nowrap}
 .dashboard-filter-count{color:#777;font-size:12px;margin:0 0 12px}
+
+/* F-08/F-09: deadline countdown and priority */
+.deadline-badge,.priority-tag{display:inline-block;border-radius:5px;padding:4px 7px;font-size:11px;font-weight:600;white-space:nowrap}
+.deadline-badge{margin-left:5px;background:#f0f0ee;color:#666}
+.deadline-overdue{background:#ffebe9;color:#b42318}
+.deadline-today{background:#fff0d8;color:#985a11}
+.deadline-soon{background:#fff4e5;color:#94651a}
+.priority-high{background:#ffece9;color:#aa3328}
+.priority-medium{background:#eef0f8;color:#46577f}
+.priority-low{background:#f1f1ef;color:#777}
+.date-label{white-space:nowrap}
+@media(max-width:700px){.dashboard-filters .dashboard-filter-field{min-width:130px}.date-label{white-space:normal}}

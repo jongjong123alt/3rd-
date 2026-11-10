@@ -9,6 +9,9 @@
     <div><dt>과목</dt><dd>{{ assignment.course or '미지정' }}</dd></div>
     <div><dt>제출기한</dt><dd>{{ assignment.due_date or '미지정' }}</dd></div>
     <div><dt>진행 상태</dt><dd>{{ statuses[assignment.status] }}</dd></div>
+    <div><dt>우선순위</dt><dd><span class="priority-tag priority-{{ assignment.priority }}">{{ priorities[assignment.priority] }}</span></dd></div>
+    {% set badge = deadline_badge(assignment.due_date, assignment.status) %}
+    {% if badge %}<div><dt>남은 기한</dt><dd><span class="deadline-badge deadline-{{ badge.kind }}">{{ badge.label }}</span></dd></div>{% endif %}
   </dl>
   <h2 class="description-title">과제 설명</h2>
   <p class="description-body">{{ assignment.description or '등록된 설명이 없습니다.' }}</p>

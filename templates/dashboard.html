@@ -25,6 +25,13 @@
         <option value="done" {{ 'selected' if filters.status == 'done' else '' }}>완료</option>
       </select>
     </label>
+    <label class="dashboard-filter-field" for="dashboard-priority">
+      <span>우선순위</span>
+      <select id="dashboard-priority" name="priority">
+        <option value="all">전체 우선순위</option>
+        {% for key, label in priorities.items() %}<option value="{{ key }}" {{ 'selected' if filters.priority == key else '' }}>{{ label }}</option>{% endfor %}
+      </select>
+    </label>
     <label class="dashboard-filter-field" for="dashboard-deadline">
       <span>제출기한</span>
       <select id="dashboard-deadline" name="deadline">
@@ -32,6 +39,14 @@
         <option value="overdue" {{ 'selected' if filters.deadline == 'overdue' else '' }}>기한 지남 (미완료)</option>
         <option value="week" {{ 'selected' if filters.deadline == 'week' else '' }}>7일 이내 (미완료)</option>
         <option value="no_due" {{ 'selected' if filters.deadline == 'no_due' else '' }}>기한 없음</option>
+      </select>
+    </label>
+    <label class="dashboard-filter-field" for="dashboard-sort">
+      <span>정렬</span>
+      <select id="dashboard-sort" name="sort">
+        <option value="due" {{ 'selected' if filters.sort == 'due' else '' }}>마감일 빠른 순</option>
+        <option value="priority" {{ 'selected' if filters.sort == 'priority' else '' }}>우선순위 높은 순</option>
+        <option value="recent" {{ 'selected' if filters.sort == 'recent' else '' }}>최근 등록 순</option>
       </select>
     </label>
     <button class="primary-button" type="submit">검색</button>
@@ -45,8 +60,12 @@
       {% for assignment in assignments %}
         <a class="assignment-row" href="{{ url_for('assignment_detail', assignment_id=assignment.id) }}">
           <span class="assignment-title">{{ assignment.title }}<small>{{ assignment.course or '과목 미지정' }}</small></span>
+          <span class="priority-tag priority-{{ assignment.priority }}">{{ priorities[assignment.priority] }}</span>
           <span class="status status-{{ assignment.status }}">{{ statuses[assignment.status] }}</span>
-          <span class="date-label">{{ assignment.due_date or '기한 없음' }}</span>
+          <span class="date-label">{{ assignment.due_date or '기한 없음' }}
+            {% set badge = deadline_badge(assignment.due_date, assignment.status) %}
+            {% if badge %}<span class="deadline-badge deadline-{{ badge.kind }}">{{ badge.label }}</span>{% endif %}
+          </span>
         </a>
       {% endfor %}
     </div>
