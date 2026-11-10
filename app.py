@@ -1,11 +1,14 @@
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime, timezone
+import csv
+import io
+import json
 import calendar
 from pathlib import Path
 import os
 import secrets
 import sqlite3
 
-from flask import Flask, abort, flash, jsonify, redirect, render_template, request, session, url_for
+from flask import Flask, Response, abort, flash, jsonify, redirect, render_template, request, session, url_for
 from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parent / '.env')
@@ -58,6 +61,14 @@ def init_db():
             assignment_id INTEGER NOT NULL,
             content TEXT NOT NULL,
             is_done INTEGER NOT NULL DEFAULT 0 CHECK(is_done IN (0,1)),
+            FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE
+        )""")
+        connection.execute("""CREATE TABLE IF NOT EXISTS assignment_notes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            assignment_id INTEGER NOT NULL,
+            kind TEXT NOT NULL DEFAULT 'note' CHECK(kind IN ('note','progress')),
+            content TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE
         )""")
 
@@ -272,10 +283,15 @@ def create_app(test_config=None):
                 "SELECT * FROM checklist_items WHERE assignment_id = ? ORDER BY id",
                 (assignment_id,)
             ).fetchall()
+        with connect_db() as connection:
+            notes = connection.execute(
+                "SELECT * FROM assignment_notes WHERE assignment_id=? ORDER BY id DESC",
+                (assignment_id,),
+            ).fetchall()
         done_count = sum(item["is_done"] for item in items)
         return render_template(
             "assignment_detail.html", assignment=assignment,
-            checklist_items=items, done_count=done_count
+            checklist_items=items, done_count=done_count, notes=notes
         )
 
     @app.route("/assignments/<int:assignment_id>/edit", methods=["GET", "POST"])
@@ -358,6 +374,106 @@ def create_app(test_config=None):
                 abort(404)
         flash("할 일이 삭제되었습니다.", "success")
         return redirect(url_for("assignment_detail", assignment_id=assignment_id))
+
+    @app.post("/assignments/<int:assignment_id>/notes")
+    def add_assignment_note(assignment_id):
+        get_assignment(assignment_id)
+        content = request.form.get("content", "").strip()
+        kind = request.form.get("kind", "note")
+        if not content or len(content) > 2000 or kind not in ("note", "progress"):
+            flash("기록 종류를 선택하고 내용을 1~2,000자로 입력해 주세요.", "error")
+        else:
+            with connect_db() as connection:
+                connection.execute(
+                    "INSERT INTO assignment_notes (assignment_id, kind, content) VALUES (?, ?, ?)",
+                    (assignment_id, kind, content),
+                )
+            flash("진행 기록이 저장되었습니다.", "success")
+        return redirect(url_for("assignment_detail", assignment_id=assignment_id) + "#assignment-notes")
+
+    @app.post("/assignments/<int:assignment_id>/notes/<int:note_id>/edit")
+    def edit_assignment_note(assignment_id, note_id):
+        get_assignment(assignment_id)
+        content = request.form.get("content", "").strip()
+        kind = request.form.get("kind", "note")
+        if not content or len(content) > 2000 or kind not in ("note", "progress"):
+            flash("기록 종류를 선택하고 내용을 1~2,000자로 입력해 주세요.", "error")
+        else:
+            with connect_db() as connection:
+                cursor = connection.execute(
+                    "UPDATE assignment_notes SET kind=?, content=? WHERE id=? AND assignment_id=?",
+                    (kind, content, note_id, assignment_id),
+                )
+                if cursor.rowcount == 0:
+                    abort(404)
+            flash("진행 기록이 수정되었습니다.", "success")
+        return redirect(url_for("assignment_detail", assignment_id=assignment_id) + "#assignment-notes")
+
+    @app.post("/assignments/<int:assignment_id>/notes/<int:note_id>/delete")
+    def delete_assignment_note(assignment_id, note_id):
+        get_assignment(assignment_id)
+        with connect_db() as connection:
+            cursor = connection.execute(
+                "DELETE FROM assignment_notes WHERE id=? AND assignment_id=?",
+                (note_id, assignment_id),
+            )
+            if cursor.rowcount == 0:
+                abort(404)
+        flash("진행 기록이 삭제되었습니다.", "success")
+        return redirect(url_for("assignment_detail", assignment_id=assignment_id) + "#assignment-notes")
+
+    @app.get("/export/backup.json")
+    def export_backup_json():
+        # Local prototype only: this endpoint exports all data without user accounts.
+        with connect_db() as connection:
+            assignments = [dict(row) for row in connection.execute(
+                "SELECT * FROM assignments ORDER BY id"
+            ).fetchall()]
+            checklist = [dict(row) for row in connection.execute(
+                "SELECT * FROM checklist_items ORDER BY id"
+            ).fetchall()]
+            notes = [dict(row) for row in connection.execute(
+                "SELECT * FROM assignment_notes ORDER BY id"
+            ).fetchall()]
+        payload = {
+            "format_version": 1,
+            "exported_at_utc": datetime.now(timezone.utc).isoformat(),
+            "assignments": assignments,
+            "checklist_items": checklist,
+            "assignment_notes": notes,
+        }
+        return Response(
+            json.dumps(payload, ensure_ascii=False, indent=2),
+            content_type="application/json; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="assignments-backup.json"',
+                     "Cache-Control": "no-store"},
+        )
+
+    @app.get("/export/assignments.csv")
+    def export_assignments_csv():
+        # Escape spreadsheet formula prefixes in untrusted user-entered fields.
+        def safe_cell(value):
+            value = "" if value is None else str(value)
+            if value.lstrip().startswith(("=", "+", "-", "@")) or value.startswith(("\t", "\r", "\n")):
+                return "'" + value
+            return value
+        with connect_db() as connection:
+            assignments = connection.execute(
+                "SELECT id, title, course, description, due_date, status, priority, created_at "
+                "FROM assignments ORDER BY id"
+            ).fetchall()
+        output = io.StringIO(newline="")
+        writer = csv.writer(output)
+        columns = ("id", "title", "course", "description", "due_date", "status", "priority", "created_at")
+        writer.writerow(columns)
+        for assignment in assignments:
+            writer.writerow([safe_cell(assignment[key]) for key in columns])
+        return Response(
+            "\ufeff" + output.getvalue(),
+            content_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="assignments.csv"',
+                     "Cache-Control": "no-store"},
+        )
 
     @app.route("/ai/analyze", methods=["GET", "POST"])
     def ai_analyze():

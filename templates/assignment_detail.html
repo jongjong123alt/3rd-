@@ -56,6 +56,46 @@
       <button type="submit" class="secondary-button">+ 추가</button>
     </form>
   </section>
+  <section class="assignment-notes" id="assignment-notes" aria-labelledby="notes-heading">
+    <div class="section-head"><h2 id="notes-heading">메모 및 진행 기록</h2><span class="muted">{{ notes|length }}개 기록</span></div>
+    <form class="assignment-form" method="post" action="{{ url_for('add_assignment_note', assignment_id=assignment.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label for="note-kind">기록 종류</label>
+      <select id="note-kind" name="kind"><option value="note">메모</option><option value="progress">진행 기록</option></select>
+      <label for="note-content">내용</label>
+      <textarea id="note-content" name="content" maxlength="2000" rows="3" required placeholder="작업 내용, 진행 상황 등을 기록해 주세요."></textarea>
+      <button class="secondary-button" type="submit">+ 기록 추가</button>
+    </form>
+    {% if notes %}
+      <ul class="note-history">
+        {% for note in notes %}
+          <li class="note-entry">
+            <div class="note-entry-top">
+              <span class="status {{ 'status-doing' if note.kind == 'progress' else 'status-todo' }}">{{ '진행 기록' if note.kind == 'progress' else '메모' }}</span>
+              <time class="muted">{{ note.created_at }}</time>
+            </div>
+            <p class="note-entry-content">{{ note.content }}</p>
+            <div class="note-entry-actions">
+              <details><summary>수정</summary>
+                <form method="post" class="note-edit-form" action="{{ url_for('edit_assignment_note', assignment_id=assignment.id, note_id=note.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                  <select name="kind" aria-label="기록 종류"><option value="note" {{ 'selected' if note.kind == 'note' else '' }}>메모</option><option value="progress" {{ 'selected' if note.kind == 'progress' else '' }}>진행 기록</option></select>
+                  <textarea name="content" maxlength="2000" rows="3" required aria-label="기록 수정">{{ note.content }}</textarea>
+                  <button class="secondary-button" type="submit">수정 저장</button>
+                </form>
+              </details>
+              <form method="post" action="{{ url_for('delete_assignment_note', assignment_id=assignment.id, note_id=note.id) }}" onsubmit="return confirm('이 기록을 삭제할까요?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="check-delete">삭제</button>
+              </form>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">아직 작성한 메모나 진행 기록이 없습니다.</p>
+    {% endif %}
+  </section>
   <div class="form-actions"><a class="primary-button" href="{{ url_for('edit_assignment', assignment_id=assignment.id) }}">과제 수정</a>
     <form method="post" action="{{ url_for('delete_assignment', assignment_id=assignment.id) }}" onsubmit="return confirm('이 과제를 삭제할까요? 삭제 후 복구할 수 없습니다.')">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">

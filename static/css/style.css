@@ -71,3 +71,18 @@
 .priority-low{background:#f1f1ef;color:#777}
 .date-label{white-space:nowrap}
 @media(max-width:700px){.dashboard-filters .dashboard-filter-field{min-width:130px}.date-label{white-space:normal}}
+
+/* F-10/F-11: export links and assignment notes */
+.assignment-notes{border-top:1px solid #ececea;margin-top:35px;padding-top:12px}
+.assignment-notes .section-head{margin:15px 0}
+.assignment-notes .assignment-form{gap:8px}
+.assignment-notes .assignment-form button{align-self:flex-start;margin-top:6px}
+.note-history{padding:0;list-style:none;display:flex;flex-direction:column;gap:12px;margin:24px 0}
+.note-entry{border:1px solid #ececea;border-radius:8px;padding:15px}
+.note-entry-top{display:flex;gap:10px;align-items:center}
+.note-entry-content{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.7}
+.note-entry-actions{display:flex;align-items:flex-start;gap:20px;font-size:12px;color:#777}
+.note-entry-actions summary{cursor:pointer}
+.note-entry-actions form{margin:0}
+.note-edit-form{display:flex;flex-direction:column;gap:9px;margin-top:10px!important}
+.note-edit-form select,.note-edit-form textarea{width:100%;max-width:640px;border:1px solid #ddd;border-radius:6px;padding:9px;font:inherit}
