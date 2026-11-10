@@ -10,6 +10,22 @@
     <div class="stat"><span>진행 중</span><strong>{{ counts.doing }}</strong><small>작업 중인 과제</small></div>
     <div class="stat"><span>마감 예정</span><strong>{{ counts.upcoming }}</strong><small>기한이 남은 미완료 과제</small></div>
   </div>
+  <section class="feature-panel" aria-labelledby="alerts-heading">
+    <h2 id="alerts-heading">마감 알림 · 오늘 할 일</h2>
+    <p class="muted">페이지를 열 때 갱신되는 앱 내부 알림입니다. 외부 푸시 알림은 아닙니다.</p>
+    {% if planning.alerts %}
+      <ul>{% for item in planning.alerts %}
+        <li><a href="{{ url_for('assignment_detail', assignment_id=item.id) }}">{{ item.title }}</a> —
+          {% if item.days < 0 %}{{ -item.days }}일 지남{% elif item.days == 0 %}오늘 마감{% else %}{{ item.days }}일 남음{% endif %}
+        </li>
+      {% endfor %}</ul>
+    {% else %}<p class="muted">3일 이내 마감되거나 기한이 지난 미완료 과제가 없습니다.</p>{% endif %}
+    <h3>오늘의 작업</h3>
+    {% if planning.today_plans or planning.today_tasks %}
+      <ul>{% for item in planning.today_plans %}<li><a href="{{ url_for('assignment_detail', assignment_id=item.assignment_id) }}">{{ item.title }}</a>: {{ item.content }} (계획)</li>{% endfor %}
+      {% for item in planning.today_tasks %}<li><a href="{{ url_for('assignment_detail', assignment_id=item.assignment_id) }}">{{ item.title }}</a>: {{ item.content }} (체크리스트)</li>{% endfor %}</ul>
+    {% else %}<p class="muted">오늘 예정된 작업이 없습니다.</p>{% endif %}
+  </section>
   <section class="dashboard-insights" aria-labelledby="insights-title">
     <div class="section-head"><h2 id="insights-title">과제 현황 분석</h2><span class="muted">전체 과제 기준</span></div>
     <div class="insight-grid">

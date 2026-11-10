@@ -56,6 +56,32 @@
       <button type="submit" class="secondary-button">+ 추가</button>
     </form>
   </section>
+  <section class="feature-panel" id="study-plan">
+    <div class="section-head"><h2>AI 일정 자동 분배</h2></div>
+    <p class="muted">Gemini가 제안한 일정입니다. 생성 시 기존 AI 일정은 교체됩니다.</p>
+    <form method="post" action="{{ url_for('make_study_plan', assignment_id=assignment.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button class="secondary-button" type="submit">✧ Gemini 일정 생성 / 다시 생성</button>
+    </form>
+    {% if study_plan %}
+      <ul class="feature-list">{% for entry in study_plan %}
+        <li><strong>{{ entry.plan_date }}</strong> · {{ entry.content }}
+          <details><summary>일정 수정</summary>
+            <form class="inline-edit" method="post" action="{{ url_for('edit_study_plan', assignment_id=assignment.id, entry_id=entry.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <input type="date" name="date" required value="{{ entry.plan_date }}">
+              <input name="content" maxlength="300" required value="{{ entry.content }}">
+              <button class="secondary-button" type="submit">저장</button>
+            </form>
+          </details>
+          <form method="post" action="{{ url_for('delete_study_plan', assignment_id=assignment.id, entry_id=entry.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button class="check-delete" type="submit">삭제</button>
+          </form>
+        </li>
+      {% endfor %}</ul>
+    {% else %}<p class="muted">생성된 일정이 없습니다.</p>{% endif %}
+  </section>
   <section class="assignment-notes" id="assignment-notes" aria-labelledby="notes-heading">
     <div class="section-head"><h2 id="notes-heading">메모 및 진행 기록</h2><span class="muted">{{ notes|length }}개 기록</span></div>
     <form class="assignment-form" method="post" action="{{ url_for('add_assignment_note', assignment_id=assignment.id) }}">

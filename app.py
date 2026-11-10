@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).resolve().parent / '.env')
 from services.gemini_service import analyze_notice, GeminiAnalysisError
 from features.auth import register_auth
+from features.planning import register_planning, dashboard_planning
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "instance" / "assignments.db"
@@ -135,6 +136,7 @@ def create_app(test_config=None):
         app.config.update(test_config)
     init_db()
     register_auth(app, connect_db)
+    register_planning(app, connect_db, get_assignment, current_owner_id)
 
     @app.before_request
     def csrf_protect():
@@ -236,6 +238,7 @@ def create_app(test_config=None):
         return render_template(
             "dashboard.html", assignments=visible, counts=counts,
             status_chart=status_chart, course_chart=course_chart, insights=insights,
+            planning=dashboard_planning(connect_db, current_owner_id()),
             filters={"q": query, "status": status_filter, "deadline": deadline_filter,
                      "priority": priority_filter, "sort": sort_by},
             filtered_count=len(visible),
@@ -338,10 +341,14 @@ def create_app(test_config=None):
                 "SELECT * FROM assignment_notes WHERE assignment_id=? ORDER BY id DESC",
                 (assignment_id,),
             ).fetchall()
+        with connect_db() as connection:
+            study_plan = connection.execute(
+                "SELECT * FROM study_plan WHERE assignment_id=? ORDER BY plan_date, id",
+                (assignment_id,)).fetchall()
         done_count = sum(item["is_done"] for item in items)
         return render_template(
             "assignment_detail.html", assignment=assignment,
-            checklist_items=items, done_count=done_count, notes=notes
+            checklist_items=items, done_count=done_count, notes=notes, study_plan=study_plan
         )
 
     @app.route("/assignments/<int:assignment_id>/edit", methods=["GET", "POST"])
