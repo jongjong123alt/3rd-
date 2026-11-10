@@ -455,7 +455,9 @@ def create_app(test_config=None):
 
     @app.get("/export/backup.json")
     def export_backup_json():
-        # Local prototype only: this endpoint exports all data without user accounts.
+        # Export contains private data: keep this endpoint local-only until login exists.
+        if request.remote_addr not in ("127.0.0.1", "::1"):
+            abort(403)
         with connect_db() as connection:
             assignments = [dict(row) for row in connection.execute(
                 "SELECT * FROM assignments ORDER BY id"
@@ -482,6 +484,8 @@ def create_app(test_config=None):
 
     @app.get("/export/assignments.csv")
     def export_assignments_csv():
+        if request.remote_addr not in ("127.0.0.1", "::1"):
+            abort(403)
         # Escape spreadsheet formula prefixes in untrusted user-entered fields.
         def safe_cell(value):
             value = "" if value is None else str(value)

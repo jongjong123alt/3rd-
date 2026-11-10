@@ -119,6 +119,12 @@ class ExtendedFeatureTests(unittest.TestCase):
         self.assertIn("운영체제", body)
         self.assertIn("과제 현황 분석", body)
 
+    def test_exports_reject_remote_clients(self):
+        for path in ("/export/backup.json", "/export/assignments.csv"):
+            with self.subTest(path=path):
+                response = self.client.get(path, environ_overrides={"REMOTE_ADDR": "192.0.2.15"})
+                self.assertEqual(response.status_code, 403)
+
     def test_csrf_protects_notes_and_exports_do_not_mutate(self):
         assignment_id = self.create("검증 과제")
         self.assertEqual(self.client.post(f"/assignments/{assignment_id}/notes",
