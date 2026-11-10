@@ -64,24 +64,17 @@ class ExtendedFeatureTests(unittest.TestCase):
             self.assertEqual(db.execute("SELECT priority FROM assignments WHERE id=?", (high,)).fetchone()[0], "low")
         self.assertEqual(self.post("/assignments/new", title="거부", priority="invalid").status_code, 400)
 
-    def test_f10_json_backup_and_csv_formula_safety(self):
-        assignment_id = self.create("=HYPERLINK(1)", course="자료구조")
+    def test_removed_backup_export_routes_and_existing_data_remain(self):
+        assignment_id = self.create("기존 데이터", course="자료구조")
         self.post(f"/assignments/{assignment_id}/checklist", content="자료 조사")
         self.post(f"/assignments/{assignment_id}/notes", kind="progress", content="1차 작업 완료")
-        response = self.client.get("/export/backup.json")
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("attachment", response.headers["Content-Disposition"])
-        self.assertEqual(response.headers["Cache-Control"], "no-store")
-        data = json.loads(response.get_data(as_text=True))
-        self.assertEqual(data["format_version"], 1)
-        self.assertEqual(data["assignments"][0]["title"], "=HYPERLINK(1)")
-        self.assertEqual(data["checklist_items"][0]["content"], "자료 조사")
-        self.assertEqual(data["assignment_notes"][0]["content"], "1차 작업 완료")
-        response = self.client.get("/export/assignments.csv")
-        self.assertEqual(response.status_code, 200)
-        rows = list(csv.DictReader(io.StringIO(response.get_data(as_text=True).lstrip("\ufeff"))))
-        self.assertEqual(rows[0]["title"], "'=HYPERLINK(1)")
-        self.assertEqual(rows[0]["priority"], "medium")
+        for path in ("/export/backup.json", "/export/assignments.csv", "/backup/restore"):
+            with self.subTest(path=path):
+                self.assertEqual(self.client.get(path).status_code, 404)
+        with project.connect_db() as db:
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM assignments").fetchone()[0], 1)
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM checklist_items").fetchone()[0], 1)
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM assignment_notes").fetchone()[0], 1)
 
     def test_f11_notes_lifecycle_isolation_and_cascade(self):
         first = self.create("과제 A")
@@ -119,13 +112,13 @@ class ExtendedFeatureTests(unittest.TestCase):
         self.assertIn("운영체제", body)
         self.assertIn("과제 현황 분석", body)
 
-    def test_exports_reject_remote_clients(self):
+    def test_removed_exports_reject_remote_clients(self):
         for path in ("/export/backup.json", "/export/assignments.csv"):
             with self.subTest(path=path):
                 response = self.client.get(path, environ_overrides={"REMOTE_ADDR": "192.0.2.15"})
-                self.assertEqual(response.status_code, 403)
+                self.assertEqual(response.status_code, 404)
 
-    def test_csrf_protects_notes_and_exports_do_not_mutate(self):
+    def test_csrf_protects_notes_and_removed_exports_do_not_mutate(self):
         assignment_id = self.create("검증 과제")
         self.assertEqual(self.client.post(f"/assignments/{assignment_id}/notes",
                                           data={"content": "위조"}).status_code, 400)
