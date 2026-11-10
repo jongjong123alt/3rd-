@@ -10,7 +10,7 @@
   <div class="layout">
     <aside class="sidebar">
       <div class="brand"><span class="brand-icon">▦</span> 과제 노트 <span class="beta">BETA</span></div>
-      {% if session.get('user_id') or config.TESTING %}
+      {% if session.get('user_id') or (config.TESTING and not config.AUTH_REQUIRED) %}
       <div class="sidebar-label">워크스페이스</div>
       <a class="nav active" href="{{ url_for('dashboard') }}">▤ <span>대시보드</span></a>
       <a class="nav" href="{{ url_for('ai_analyze') }}">✧ <span>AI 공지 분석</span></a>
@@ -31,7 +31,7 @@
       <div class="sidebar-bottom">AI 과제 분석 · 일정 관리<br><small>4단계 AI 공지 분석</small></div>
     </aside>
     <main class="main">
-      <header class="topbar"><span>내 워크스페이스 / {% block breadcrumb %}대시보드{% endblock %}</span><span class="stage">프로토타입</span>{% if session.get('user_id') %}<form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="secondary-button">로그아웃</button></form>{% else %}<div class="public-top-actions"><a href="{{ url_for('login') }}">로그인</a><a class="secondary-button" href="{{ url_for('register') }}">회원가입</a></div>{% endif %}</header>
+      <header class="topbar"><span>{{ '내 워크스페이스' if session.get('user_id') else '과제 노트' }} / {% block breadcrumb %}대시보드{% endblock %}</span><span class="stage">프로토타입</span>{% if session.get('user_id') %}<form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="secondary-button">로그아웃</button></form>{% else %}<div class="public-top-actions"><a href="{{ url_for('login') }}">로그인</a><a class="secondary-button" href="{{ url_for('register') }}">회원가입</a></div>{% endif %}</header>
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
           <div class="toast {{ category }}" role="status">{{ message }}</div>

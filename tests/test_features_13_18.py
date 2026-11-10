@@ -157,7 +157,8 @@ class AuthIsolationTests(unittest.TestCase):
     def test_f18_login_owner_isolation_and_legacy_adoption(self):
         with project.connect_db() as db:
             db.execute("INSERT INTO assignments(title) VALUES ('이전 과제')")
-        self.assertEqual(self.client.get("/").status_code, 302)
+        self.assertEqual(self.client.get("/").status_code, 200)
+        self.assertIn("전체 기능 보기", self.client.get("/").get_data(as_text=True))
         self.assertEqual(self.post("/auth/register", username="first_user",
                                    password="long-password-123").status_code, 302)
         self.update_token()
