@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}백업 복원 · 과제 노트{% endblock %}
+{% block breadcrumb %}백업 복원{% endblock %}
+{% block content %}
+<section class="content">
+  <h1>JSON 백업 복원</h1>
+  <p class="intro">기존 데이터를 지우지 않고 백업의 과제·체크리스트·메모·AI 일정을 추가합니다.</p>
+  <div class="note"><strong>복원 전 확인</strong><p>같은 백업을 두 번 복원하면 과제가 중복됩니다. 첨부파일은 JSON 백업에 포함되지 않습니다. 2MB 이하의 이 앱 JSON 백업만 사용할 수 있습니다.</p></div>
+  <form class="assignment-form" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label for="backup">백업 파일 (.json)</label>
+    <input type="file" id="backup" name="backup" accept=".json,application/json" required>
+    <label><input type="checkbox" name="confirm" value="yes" required style="width:auto"> 기존 데이터에 추가하는 복원 작업에 동의합니다.</label>
+    <button type="submit" class="primary-button">JSON 백업 복원</button>
+  </form>
+</section>
+{% endblock %}

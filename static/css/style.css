@@ -108,3 +108,21 @@
 .insight-checklist>div:first-child{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:13px}
 .insight-checklist span{color:#777;font-size:12px}
 @media(max-width:700px){.insight-grid{grid-template-columns:1fr}.insight-checklist>div:first-child{flex-wrap:wrap}}
+
+/* F-13~F-18: additive workspace sections */
+.feature-panel{margin:26px 0;padding:19px 21px;border:1px solid #eaeae8;border-radius:8px}
+.feature-panel h2{font-size:18px;margin:0 0 12px}
+.feature-panel h3{font-size:14px;margin:20px 0 8px}
+.feature-panel ul{padding-left:21px;font-size:13px;line-height:1.9}
+.feature-panel a{color:#444}
+.feature-list{padding-left:20px}
+.feature-list li{margin:12px 0}
+.feature-list form{display:inline-block;margin-left:10px}
+.feature-list details{margin:5px 0}
+.inline-edit{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0}
+.inline-edit input{min-width:130px;padding:9px;border:1px solid #ddd;border-radius:6px;font:inherit;font-size:13px}
+.auth-content{max-width:550px}
+.auth-content .assignment-form{margin-bottom:20px}
+.topbar{gap:12px}
+.topbar form{margin:0}
+@media(max-width:700px){.feature-panel{padding:14px}.inline-edit input{width:100%}}

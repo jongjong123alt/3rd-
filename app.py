@@ -15,6 +15,8 @@ load_dotenv(Path(__file__).resolve().parent / '.env')
 from services.gemini_service import analyze_notice, GeminiAnalysisError
 from features.auth import register_auth
 from features.planning import register_planning, dashboard_planning
+from features.backup import register_backup
+from features.attachments import register_attachments, cleanup_assignment_files
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "instance" / "assignments.db"
@@ -131,12 +133,16 @@ def validate_form(form):
 
 def create_app(test_config=None):
     app = Flask(__name__)
-    app.config.update(SECRET_KEY=os.environ.get("FLASK_SECRET_KEY") or secrets.token_hex(32))
+    app.config.update(SECRET_KEY=os.environ.get("FLASK_SECRET_KEY") or secrets.token_hex(32),
+                      MAX_CONTENT_LENGTH=6 * 1024 * 1024,
+                      SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax")
     if test_config:
         app.config.update(test_config)
     init_db()
     register_auth(app, connect_db)
     register_planning(app, connect_db, get_assignment, current_owner_id)
+    register_backup(app, connect_db, current_owner_id, validate_form)
+    register_attachments(app, connect_db, get_assignment, lambda: DB_PATH)
 
     @app.before_request
     def csrf_protect():
@@ -345,10 +351,15 @@ def create_app(test_config=None):
             study_plan = connection.execute(
                 "SELECT * FROM study_plan WHERE assignment_id=? ORDER BY plan_date, id",
                 (assignment_id,)).fetchall()
+        with connect_db() as connection:
+            attachments = connection.execute(
+                "SELECT * FROM attachments WHERE assignment_id=? ORDER BY id DESC",
+                (assignment_id,)).fetchall()
         done_count = sum(item["is_done"] for item in items)
         return render_template(
             "assignment_detail.html", assignment=assignment,
-            checklist_items=items, done_count=done_count, notes=notes, study_plan=study_plan
+            checklist_items=items, done_count=done_count, notes=notes, study_plan=study_plan,
+            attachments=attachments
         )
 
     @app.route("/assignments/<int:assignment_id>/edit", methods=["GET", "POST"])
@@ -370,6 +381,7 @@ def create_app(test_config=None):
     @app.post("/assignments/<int:assignment_id>/delete")
     def delete_assignment(assignment_id):
         get_assignment(assignment_id)
+        cleanup_assignment_files(connect_db, DB_PATH, assignment_id)
         with connect_db() as connection:
             connection.execute("DELETE FROM assignments WHERE id=? AND owner_id IS ?", (assignment_id, current_owner_id()))
         flash("과제가 삭제되었습니다.", "success")
@@ -496,12 +508,17 @@ def create_app(test_config=None):
                 "SELECT * FROM assignment_notes WHERE assignment_id IN "
                 "(SELECT id FROM assignments WHERE owner_id IS ?) ORDER BY id", (current_owner_id(),)
             ).fetchall()]
+            plans = [dict(row) for row in connection.execute(
+                "SELECT * FROM study_plan WHERE assignment_id IN "
+                "(SELECT id FROM assignments WHERE owner_id IS ?) ORDER BY id", (current_owner_id(),)
+            ).fetchall()]
         payload = {
             "format_version": 1,
             "exported_at_utc": datetime.now(timezone.utc).isoformat(),
             "assignments": assignments,
             "checklist_items": checklist,
             "assignment_notes": notes,
+            "study_plan": plans,
         }
         return Response(
             json.dumps(payload, ensure_ascii=False, indent=2),

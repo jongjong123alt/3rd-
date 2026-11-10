@@ -82,6 +82,25 @@
       {% endfor %}</ul>
     {% else %}<p class="muted">생성된 일정이 없습니다.</p>{% endif %}
   </section>
+  <section class="feature-panel" id="attachments">
+    <div class="section-head"><h2>첨부파일</h2><span class="muted">{{ attachments|length }}개</span></div>
+    <p class="muted">PDF, PNG, JPG, UTF-8 TXT, DOCX · 파일당 최대 5MB</p>
+    <form class="inline-edit" method="post" enctype="multipart/form-data" action="{{ url_for('add_attachment', assignment_id=assignment.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="file" name="attachment" accept=".pdf,.png,.jpg,.jpeg,.txt,.docx" required>
+      <button type="submit" class="secondary-button">파일 첨부</button>
+    </form>
+    {% if attachments %}<ul class="feature-list">
+      {% for file in attachments %}
+      <li><a href="{{ url_for('download_attachment', assignment_id=assignment.id, attachment_id=file.id) }}">{{ file.original_name }}</a>
+        <span class="muted">({{ (file.byte_size / 1024)|round(1) }} KB)</span>
+        <form method="post" action="{{ url_for('delete_attachment', assignment_id=assignment.id, attachment_id=file.id) }}" onsubmit="return confirm('파일을 삭제할까요?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button class="check-delete" type="submit">삭제</button>
+        </form>
+      </li>{% endfor %}
+    </ul>{% endif %}
+  </section>
   <section class="assignment-notes" id="assignment-notes" aria-labelledby="notes-heading">
     <div class="section-head"><h2 id="notes-heading">메모 및 진행 기록</h2><span class="muted">{{ notes|length }}개 기록</span></div>
     <form class="assignment-form" method="post" action="{{ url_for('add_assignment_note', assignment_id=assignment.id) }}">
