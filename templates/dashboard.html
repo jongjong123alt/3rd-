@@ -21,6 +21,10 @@
         </li>
       {% endfor %}</ul>
     {% else %}<p class="muted">3일 이내 마감되거나 기한이 지난 미완료 과제가 없습니다.</p>{% endif %}
+    <div class="notification-controls">
+      <button class="secondary-button" type="button" id="notification-toggle">브라우저 알림 켜기</button>
+      <span class="muted" id="notification-status" role="status" aria-live="polite">브라우저에서 권한을 허용하면 대시보드 접속 시 마감 알림을 표시합니다.</span>
+    </div>
     <h3>오늘의 작업</h3>
     {% if planning.today_plans or planning.today_tasks %}
       <ul>{% for item in planning.today_plans %}<li><a href="{{ url_for('assignment_detail', assignment_id=item.assignment_id) }}">{{ item.title }}</a>: {{ item.content }} (계획)</li>{% endfor %}
@@ -28,6 +32,8 @@
     {% else %}<p class="muted">오늘 예정된 작업이 없습니다.</p>{% endif %}
   </section>
   {% endif %}
+  <script id="notification-data" type="application/json">{{ notification_payload|tojson }}</script>
+  <script src="{{ url_for('static', filename='js/deadline_notifications.js') }}" defer></script>
   <section class="dashboard-insights" aria-labelledby="insights-title">
     <div class="section-head"><h2 id="insights-title">과제 현황 분석</h2><span class="muted">전체 과제 기준</span></div>
     <div class="insight-grid">

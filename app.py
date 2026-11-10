@@ -241,10 +241,18 @@ def create_app(test_config=None):
             visible = sorted(visible, key=lambda a: (rank.get(a["priority"], 1), a["due_date"] or "9999-12-31", -a["id"]))
         elif sort_by == "recent":
             visible = sorted(visible, key=lambda a: -a["id"])
+        planning_data = dashboard_planning(connect_db, current_owner_id())
+        notification_payload = {
+            "user_id": str(current_owner_id() or "test"),
+            "alerts": [
+                {"id": item["id"], "title": item["title"], "days": item["days"]}
+                for item in planning_data["alerts"] if -365 <= item["days"] <= 3
+            ][:5],
+        }
         return render_template(
             "dashboard.html", assignments=visible, counts=counts,
             status_chart=status_chart, course_chart=course_chart, insights=insights,
-            planning=dashboard_planning(connect_db, current_owner_id()),
+            planning=planning_data, notification_payload=notification_payload,
             filters={"q": query, "status": status_filter, "deadline": deadline_filter,
                      "priority": priority_filter, "sort": sort_by},
             filtered_count=len(visible),
@@ -587,8 +595,8 @@ def create_app(test_config=None):
             return render_template("ai_analyze.html", notice="", result=None,
                                    error="파일은 5MB 이하이며 비어 있지 않아야 합니다."), 400
         valid = (data.startswith(b"%PDF-") if extension == ".pdf" else
-                 data.startswith(b"\\x89PNG\\r\\n\\x1a\\n") if extension == ".png" else
-                 data.startswith(b"\\xff\\xd8\\xff"))
+                 data.startswith(b"\x89PNG\r\n\x1a\n") if extension == ".png" else
+                 data.startswith(b"\xff\xd8\xff"))
         if not valid:
             return render_template("ai_analyze.html", notice="", result=None,
                                    error="파일 형식이 확장자와 일치하지 않습니다."), 400

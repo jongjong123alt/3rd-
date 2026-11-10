@@ -126,3 +126,7 @@
 .topbar{gap:12px}
 .topbar form{margin:0}
 @media(max-width:700px){.feature-panel{padding:14px}.inline-edit input{width:100%}}
+
+/* F-20: browser notification opt-in */
+.notification-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0 20px}
+.notification-controls .muted{font-size:12px}
