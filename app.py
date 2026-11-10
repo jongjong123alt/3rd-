@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parent / '.env')
 from services.gemini_service import analyze_notice, GeminiAnalysisError
+from features.auth import register_auth
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "instance" / "assignments.db"
@@ -53,9 +54,18 @@ def init_db():
             status TEXT NOT NULL DEFAULT 'todo' CHECK(status IN ('todo','doing','done')),
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         )""")
+        connection.execute("""CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )""")
         columns = {row["name"] for row in connection.execute("PRAGMA table_info(assignments)")}
         if "priority" not in columns:
             connection.execute("ALTER TABLE assignments ADD COLUMN priority TEXT NOT NULL DEFAULT 'medium'")
+        if "owner_id" not in columns:
+            connection.execute("ALTER TABLE assignments ADD COLUMN owner_id INTEGER")
+        connection.execute("CREATE INDEX IF NOT EXISTS idx_assignments_owner ON assignments(owner_id)")
         connection.execute("""CREATE TABLE IF NOT EXISTS checklist_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             assignment_id INTEGER NOT NULL,
@@ -73,10 +83,15 @@ def init_db():
         )""")
 
 
+def current_owner_id():
+    return session.get("user_id")
+
+
 def get_assignment(assignment_id):
     with connect_db() as connection:
         assignment = connection.execute(
-            "SELECT * FROM assignments WHERE id = ?", (assignment_id,)
+            "SELECT * FROM assignments WHERE id = ? AND owner_id IS ?",
+            (assignment_id, current_owner_id())
         ).fetchone()
     if assignment is None:
         abort(404)
@@ -119,6 +134,7 @@ def create_app(test_config=None):
     if test_config:
         app.config.update(test_config)
     init_db()
+    register_auth(app, connect_db)
 
     @app.before_request
     def csrf_protect():
@@ -139,7 +155,8 @@ def create_app(test_config=None):
     def dashboard():
         with connect_db() as connection:
             assignments = connection.execute(
-                "SELECT * FROM assignments ORDER BY CASE WHEN due_date IS NULL OR due_date = '' THEN 1 ELSE 0 END, due_date ASC, id DESC"
+                "SELECT * FROM assignments WHERE owner_id IS ? ORDER BY CASE WHEN due_date IS NULL OR due_date = '' THEN 1 ELSE 0 END, due_date ASC, id DESC",
+                (current_owner_id(),)
             ).fetchall()
         today = date.today().isoformat()
         counts = {
@@ -166,7 +183,9 @@ def create_app(test_config=None):
         ]
         with connect_db() as connection:
             checklist_stats = connection.execute(
-                "SELECT COUNT(*) AS total, COALESCE(SUM(is_done), 0) AS done FROM checklist_items"
+                "SELECT COUNT(*) AS total, COALESCE(SUM(is_done), 0) AS done FROM checklist_items "
+                "WHERE assignment_id IN (SELECT id FROM assignments WHERE owner_id IS ?)",
+                (current_owner_id(),)
             ).fetchone()
         checklist_total = checklist_stats["total"]
         checklist_done = checklist_stats["done"]
@@ -258,14 +277,14 @@ def create_app(test_config=None):
             if after_last:
                 assignments = connection.execute(
                     "SELECT id, title, course, due_date, status FROM assignments "
-                    "WHERE due_date >= ? AND due_date < ? ORDER BY due_date, id",
-                    (first, after_last),
+                    "WHERE owner_id IS ? AND due_date >= ? AND due_date < ? ORDER BY due_date, id",
+                    (current_owner_id(), first, after_last),
                 ).fetchall()
             else:
                 assignments = connection.execute(
                     "SELECT id, title, course, due_date, status FROM assignments "
-                    "WHERE due_date >= ? AND due_date <= ? ORDER BY due_date, id",
-                    (first, "9999-12-31"),
+                    "WHERE owner_id IS ? AND due_date >= ? AND due_date <= ? ORDER BY due_date, id",
+                    (current_owner_id(), first, "9999-12-31"),
                 ).fetchall()
 
         by_day = {}
@@ -298,8 +317,8 @@ def create_app(test_config=None):
             if not errors:
                 with connect_db() as connection:
                     connection.execute(
-                        "INSERT INTO assignments (title, course, description, due_date, status, priority) VALUES (?, ?, ?, ?, ?, ?)",
-                        (values["title"], values["course"], values["description"], values["due_date"] or None, values["status"], values["priority"]),
+                        "INSERT INTO assignments (title, course, description, due_date, status, priority, owner_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        (values["title"], values["course"], values["description"], values["due_date"] or None, values["status"], values["priority"], current_owner_id()),
                     )
                 flash("과제가 등록되었습니다.", "success")
                 return redirect(url_for("dashboard"))
@@ -333,8 +352,8 @@ def create_app(test_config=None):
             if not errors:
                 with connect_db() as connection:
                     connection.execute(
-                        "UPDATE assignments SET title=?, course=?, description=?, due_date=?, status=?, priority=? WHERE id=?",
-                        (values["title"], values["course"], values["description"], values["due_date"] or None, values["status"], values["priority"], assignment_id),
+                        "UPDATE assignments SET title=?, course=?, description=?, due_date=?, status=?, priority=? WHERE id=? AND owner_id IS ?",
+                        (values["title"], values["course"], values["description"], values["due_date"] or None, values["status"], values["priority"], assignment_id, current_owner_id()),
                     )
                 flash("과제가 수정되었습니다.", "success")
                 return redirect(url_for("assignment_detail", assignment_id=assignment_id))
@@ -345,7 +364,7 @@ def create_app(test_config=None):
     def delete_assignment(assignment_id):
         get_assignment(assignment_id)
         with connect_db() as connection:
-            connection.execute("DELETE FROM assignments WHERE id=?", (assignment_id,))
+            connection.execute("DELETE FROM assignments WHERE id=? AND owner_id IS ?", (assignment_id, current_owner_id()))
         flash("과제가 삭제되었습니다.", "success")
         return redirect(url_for("dashboard"))
 
@@ -460,13 +479,15 @@ def create_app(test_config=None):
             abort(403)
         with connect_db() as connection:
             assignments = [dict(row) for row in connection.execute(
-                "SELECT * FROM assignments ORDER BY id"
+                "SELECT * FROM assignments WHERE owner_id IS ? ORDER BY id", (current_owner_id(),)
             ).fetchall()]
             checklist = [dict(row) for row in connection.execute(
-                "SELECT * FROM checklist_items ORDER BY id"
+                "SELECT * FROM checklist_items WHERE assignment_id IN "
+                "(SELECT id FROM assignments WHERE owner_id IS ?) ORDER BY id", (current_owner_id(),)
             ).fetchall()]
             notes = [dict(row) for row in connection.execute(
-                "SELECT * FROM assignment_notes ORDER BY id"
+                "SELECT * FROM assignment_notes WHERE assignment_id IN "
+                "(SELECT id FROM assignments WHERE owner_id IS ?) ORDER BY id", (current_owner_id(),)
             ).fetchall()]
         payload = {
             "format_version": 1,
@@ -495,7 +516,7 @@ def create_app(test_config=None):
         with connect_db() as connection:
             assignments = connection.execute(
                 "SELECT id, title, course, description, due_date, status, priority, created_at "
-                "FROM assignments ORDER BY id"
+                "FROM assignments WHERE owner_id IS ? ORDER BY id", (current_owner_id(),)
             ).fetchall()
         output = io.StringIO(newline="")
         writer = csv.writer(output)
@@ -555,10 +576,10 @@ def create_app(test_config=None):
 
         with connect_db() as connection:
             cursor = connection.execute(
-                "INSERT INTO assignments (title, course, description, due_date, status) "
-                "VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO assignments (title, course, description, due_date, status, owner_id) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
                 (values["title"], values["course"], values["description"],
-                 values["due_date"] or None, "todo"),
+                 values["due_date"] or None, "todo", current_owner_id()),
             )
             assignment_id = cursor.lastrowid
             connection.executemany(

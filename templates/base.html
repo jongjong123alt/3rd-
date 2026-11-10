@@ -10,16 +10,18 @@
   <div class="layout">
     <aside class="sidebar">
       <div class="brand"><span class="brand-icon">▦</span> 과제 노트 <span class="beta">BETA</span></div>
+      {% if session.get('user_id') or config.TESTING %}
       <div class="sidebar-label">워크스페이스</div>
       <a class="nav active" href="{{ url_for('dashboard') }}">▤ <span>대시보드</span></a>
       <a class="nav" href="{{ url_for('ai_analyze') }}">✧ <span>AI 공지 분석</span></a>
       <a class="nav" href="{{ url_for('calendar_view') }}">▦ <span>마감 달력</span></a>
       <a class="nav" href="{{ url_for('export_backup_json') }}">↓ <span>JSON 전체 백업</span></a>
       <a class="nav" href="{{ url_for('export_assignments_csv') }}">↓ <span>과제 CSV 내보내기</span></a>
+      {% endif %}
       <div class="sidebar-bottom">AI 과제 분석 · 일정 관리<br><small>4단계 AI 공지 분석</small></div>
     </aside>
     <main class="main">
-      <header class="topbar"><span>내 워크스페이스 / {% block breadcrumb %}대시보드{% endblock %}</span><span class="stage">프로토타입</span></header>
+      <header class="topbar"><span>내 워크스페이스 / {% block breadcrumb %}대시보드{% endblock %}</span><span class="stage">프로토타입</span>{% if session.get('user_id') %}<form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="secondary-button">로그아웃</button></form>{% endif %}</header>
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
           <div class="toast {{ category }}" role="status">{{ message }}</div>
