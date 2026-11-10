@@ -62,7 +62,10 @@ def validate_backup(payload, validate_form):
                     date.fromisoformat(day)
                 except ValueError as exc:
                     raise RestoreError("학습 일정 날짜가 올바르지 않습니다.") from exc
-                parsed.append((item["assignment_id"], day, value.strip()))
+                manual = item.get("is_manual", 0)
+                if type(manual) is not int or manual not in (0, 1):
+                    raise RestoreError("학습 일정 수정 상태가 올바르지 않습니다.")
+                parsed.append((item["assignment_id"], day, value.strip(), manual))
         children[key] = parsed
     return normalized, children
 
@@ -103,7 +106,7 @@ def register_backup(app, connect_db, current_owner_id, validate_form):
                            [(mapping[a], content, done) for a, content, done in children["checklist_items"]])
             db.executemany("INSERT INTO assignment_notes(assignment_id, kind, content) VALUES (?,?,?)",
                            [(mapping[a], kind, content) for a, kind, content in children["assignment_notes"]])
-            db.executemany("INSERT INTO study_plan(assignment_id, plan_date, content) VALUES (?,?,?)",
-                           [(mapping[a], day, content) for a, day, content in children["study_plan"]])
+            db.executemany("INSERT INTO study_plan(assignment_id, plan_date, content, is_manual) VALUES (?,?,?,?)",
+                           [(mapping[a], day, content, manual) for a, day, content, manual in children["study_plan"]])
         flash(f"과제 {len(normalized)}개를 기존 데이터에 추가했습니다.", "success")
         return redirect(url_for("dashboard"))

@@ -1,20 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}AI 공지 분석 · 과제 노트<script>
-  (() => {
-    const form = document.getElementById('ai-analysis-form');
-    const button = document.getElementById('ai-submit-button');
-    const status = document.getElementById('ai-loading-status');
-    if (!form || !button || !status) return;
-    form.addEventListener('submit', (event) => {
-      if (!form.checkValidity()) return;
-      if (button.disabled) { event.preventDefault(); return; }
-      button.disabled = true;
-      button.textContent = '분석 중...';
-      status.hidden = false;
-    });
-  })();
-</script>
-{% endblock %}
+{% block title %}AI 공지 분석 · 과제 노트{% endblock %}
 {% block breadcrumb %}AI 공지 분석{% endblock %}
 {% block content %}
 <section class="content">
@@ -26,7 +11,8 @@
     <label for="notice">과제 공지문 <span class="required">*</span></label>
     <textarea id="notice" name="notice" rows="11" maxlength="10000" required placeholder="교수님의 과제 공지문을 여기에 붙여 넣으세요.">{{ notice }}</textarea>
     <p class="muted">공지문에 개인정보나 API 키를 포함하지 마세요. 입력 내용은 Gemini API로 전송됩니다.</p>
-    <div class="form-actions"><button class="primary-button" id="ai-submit-button" type="submit">✧ AI 분석하기</button></div>\n    <p class="muted" id="ai-loading-status" role="status" aria-live="polite" hidden>AI가 공지문을 분석하고 있습니다. 잠시 기다려 주세요.</p>
+    <div class="form-actions"><button class="primary-button" id="ai-submit-button" type="submit">✧ AI 분석하기</button></div>
+    <p class="muted" id="ai-loading-status" role="status" aria-live="polite" hidden>AI가 공지문을 분석하고 있습니다. 잠시 기다려 주세요.</p>
   </form>
   <section class="feature-panel" aria-labelledby="file-analysis-heading">
     <h2 id="file-analysis-heading">PDF·이미지 공지 분석</h2>
@@ -53,6 +39,21 @@
       });
     })();
   </script>
+  <script>
+  (() => {
+    const form = document.getElementById('ai-analysis-form');
+    const button = document.getElementById('ai-submit-button');
+    const status = document.getElementById('ai-loading-status');
+    if (!form || !button || !status) return;
+    form.addEventListener('submit', (event) => {
+      if (!form.checkValidity()) return;
+      if (button.disabled) { event.preventDefault(); return; }
+      button.disabled = true;
+      button.textContent = '분석 중...';
+      status.hidden = false;
+    });
+  })();
+</script>
   {% if error %}<div class="form-errors" role="alert"><p>{{ error }}</p></div>{% endif %}
   {% if result %}
   <section class="analysis-result" aria-labelledby="analysis-heading">

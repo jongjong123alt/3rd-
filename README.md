@@ -1,6 +1,6 @@
 # AI 기반 과제 분석 및 일정 관리 웹서비스
 
-Python Flask + SQLite + Google Gemini 기반 대학 과제 관리 프로토타입. 기존 노션 스타일 UI와 과제·체크리스트·달력 기능을 유지하며 F-01~F-18 기능을 단계적으로 구현했습니다.
+Python Flask + SQLite + Google Gemini 기반 대학 과제 관리 프로토타입. 기존 노션 스타일 UI와 과제·체크리스트·달력 기능을 유지하며 F-01~F-21 기능을 단계적으로 구현했습니다.
 
 ## 설치와 실행 (Windows PowerShell)
 
@@ -37,6 +37,9 @@ API 키가 없어도 일반 과제 관리 기능은 사용할 수 있으나 Gemi
 - **F-16:** JSON 백업 검증·병합 복원 (첨부파일 미포함)
 - **F-17:** PDF·PNG·JPG·UTF-8 TXT·DOCX 첨부파일 관리 (파일당 5MB)
 - **F-18:** 비밀번호 해시, 로그인·로그아웃, 사용자별 데이터 접근 제한
+- **F-19:** PDF·PNG·JPG 공지문을 Gemini 멀티모달로 분석하여 수정 가능한 미리보기 제공
+- **F-20:** 브라우저 알림 권한 동의 후 대시보드 접속 시 마감 알림 (하루 중복 방지, 페이지 닫힌 상태의 푸시 아님)
+- **F-21:** 과제·체크리스트 변경 시 선택형 Gemini 자동 재계획 (실패 시 기존 일정 유지, 직접 수정한 일정 보존)
 
 ## 기존 사용자 주의사항
 
@@ -50,4 +53,4 @@ API 키가 없어도 일반 과제 관리 기능은 사용할 수 있으나 Gemi
 
 GitHub Actions가 push 시 Python 문법 검사 및 `python -m unittest discover -s tests -v`를 실행합니다. 실제 Gemini API 응답, Windows 환경, 브라우저에서의 파일 업로드·다운로드는 사용자가 별도 확인해야 합니다.
 
-자세한 검증 절차: [F-13~F-18 검증 문서](docs/F13_F18_VALIDATION.md)
+자세한 검증 절차: [F-13~F-18 검증 문서](docs/F13_F18_VALIDATION.md) · [F-19~F-21 검증 문서](docs/F19_F21_VALIDATION.md)
