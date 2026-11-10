@@ -15,6 +15,56 @@ def init_planning_db(connect_db):
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(assignment_id) REFERENCES assignments(id) ON DELETE CASCADE
         )""")
+        columns = {r["name"] for r in db.execute("PRAGMA table_info(study_plan)")}
+        if "is_manual" not in columns:
+            db.execute("ALTER TABLE study_plan ADD COLUMN is_manual INTEGER NOT NULL DEFAULT 0")
+
+
+def maybe_auto_replan(connect_db, assignment_id, owner_id):
+    """F-21: replan after relevant edits, only when explicitly enabled.
+
+    Keep the existing AI plan if the Gemini call fails, and always preserve
+    entries the user has manually edited. The POST waits for Gemini to finish.
+    """
+    with connect_db() as db:
+        assignment = db.execute(
+            "SELECT * FROM assignments WHERE id=? AND owner_id IS ?",
+            (assignment_id, owner_id)).fetchone()
+        if assignment is None or not assignment["auto_replan_enabled"]:
+            return False
+        db.execute("UPDATE assignments SET replan_pending=1 WHERE id=?", (assignment_id,))
+        if assignment["status"] == "done" or not assignment["due_date"]:
+            flash("자동 재계획 대기: 미완료 과제에 제출기한을 지정해 주세요.", "error")
+            return False
+        today = date.today()
+        due = date.fromisoformat(assignment["due_date"])
+        if due < today:
+            flash("자동 재계획 대기: 이미 마감된 과제입니다.", "error")
+            return False
+        tasks = [r["content"] for r in db.execute(
+            "SELECT content FROM checklist_items WHERE assignment_id=? AND is_done=0 ORDER BY id",
+            (assignment_id,))]
+        snapshot = dict(assignment)
+    try:
+        entries = generate_study_plan(snapshot, tasks, today)
+    except PlanError as exc:
+        flash("자동 재계획 실패: " + str(exc) + " 기존 일정은 유지됩니다.", "error")
+        return False
+    with connect_db() as db:
+        current = db.execute(
+            "SELECT due_date, status, auto_replan_enabled FROM assignments "
+            "WHERE id=? AND owner_id IS ?", (assignment_id, owner_id)).fetchone()
+        if (current is None or not current["auto_replan_enabled"] or
+                current["due_date"] != snapshot["due_date"] or current["status"] != snapshot["status"]):
+            return False
+        db.execute("DELETE FROM study_plan WHERE assignment_id=? AND is_manual=0", (assignment_id,))
+        db.executemany(
+            "INSERT INTO study_plan (assignment_id, plan_date, content, is_manual) VALUES (?,?,?,0)",
+            [(assignment_id, entry["date"], entry["task"]) for entry in entries],
+        )
+        db.execute("UPDATE assignments SET replan_pending=0 WHERE id=?", (assignment_id,))
+    flash("Gemini가 변경된 과제에 맞춰 AI 일정을 자동 갱신했습니다. 직접 수정한 일정은 유지됩니다.", "success")
+    return True
 
 
 def dashboard_planning(connect_db, owner_id):
@@ -70,6 +120,27 @@ def schedule_conflicts(connect_db, owner_id):
 def register_planning(app, connect_db, get_assignment, current_owner_id):
     init_planning_db(connect_db)
 
+    @app.post("/assignments/<int:assignment_id>/auto-replan")
+    def toggle_auto_replan(assignment_id):
+        assignment = get_assignment(assignment_id)
+        enable = request.form.get("enabled") == "yes"
+        with connect_db() as db:
+            db.execute(
+                "UPDATE assignments SET auto_replan_enabled=?, replan_pending=0 WHERE id=?",
+                (int(enable), assignment_id))
+        flash("변경 시 AI 자동 재계획을 켰습니다. 다음 과제/체크리스트 변경부터 실행됩니다." if enable
+              else "AI 자동 재계획을 껐습니다.", "success")
+        return redirect(url_for("assignment_detail", assignment_id=assignment_id) + "#study-plan")
+
+    @app.post("/assignments/<int:assignment_id>/replan")
+    def retry_auto_replan(assignment_id):
+        assignment = get_assignment(assignment_id)
+        if not assignment["auto_replan_enabled"]:
+            flash("먼저 AI 자동 재계획을 켜 주세요.", "error")
+        else:
+            maybe_auto_replan(connect_db, assignment_id, current_owner_id())
+        return redirect(url_for("assignment_detail", assignment_id=assignment_id) + "#study-plan")
+
     @app.get("/schedule")
     def schedule_view():
         return render_template("schedule.html",
@@ -118,7 +189,7 @@ def register_planning(app, connect_db, get_assignment, current_owner_id):
         else:
             with connect_db() as db:
                 changed = db.execute(
-                    "UPDATE study_plan SET plan_date=?, content=? WHERE id=? AND assignment_id=?",
+                    "UPDATE study_plan SET plan_date=?, content=?, is_manual=1 WHERE id=? AND assignment_id=?",
                     (day, content, entry_id, assignment_id))
                 if not changed.rowcount:
                     abort(404)

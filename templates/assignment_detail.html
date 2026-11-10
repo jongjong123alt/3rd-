@@ -58,14 +58,30 @@
   </section>
   <section class="feature-panel" id="study-plan">
     <div class="section-head"><h2>AI 일정 자동 분배</h2></div>
-    <p class="muted">Gemini가 제안한 일정입니다. 생성 시 기존 AI 일정은 교체됩니다.</p>
+    <p class="muted">Gemini가 제안한 일정입니다. 아래 수동 생성 버튼은 기존 일정을 모두 교체합니다.</p>
+    <div class="auto-replan-controls">
+      <form method="post" action="{{ url_for('toggle_auto_replan', assignment_id=assignment.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="enabled" value="{{ 'no' if assignment.auto_replan_enabled else 'yes' }}">
+        <button type="submit" class="secondary-button">{{ '자동 재계획 끄기' if assignment.auto_replan_enabled else 'AI 자동 재계획 켜기' }}</button>
+      </form>
+      <span class="muted">상태: {{ '켜짐' if assignment.auto_replan_enabled else '꺼짐' }}</span>
+    </div>
+    <p class="muted">켜면 과제 내용·제출기한·우선순위 또는 체크리스트 변경 후 Gemini가 자동으로 새 계획을 생성합니다. 요청 중 최대 약 30초 기다릴 수 있으며, 실패 시 기존 계획은 유지됩니다. 직접 수정한 일정은 보존합니다.</p>
+    {% if assignment.replan_pending and assignment.auto_replan_enabled %}
+      <div class="form-errors" role="status"><p>자동 재계획이 완료되지 않았습니다. 현재 계획을 유지하고 있습니다.</p></div>
+      <form method="post" action="{{ url_for('retry_auto_replan', assignment_id=assignment.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button class="secondary-button" type="submit">AI 재계획 다시 시도</button>
+      </form>
+    {% endif %}
     <form method="post" action="{{ url_for('make_study_plan', assignment_id=assignment.id) }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <button class="secondary-button" type="submit">✧ Gemini 일정 생성 / 다시 생성</button>
     </form>
     {% if study_plan %}
       <ul class="feature-list">{% for entry in study_plan %}
-        <li><strong>{{ entry.plan_date }}</strong> · {{ entry.content }}
+        <li><strong>{{ entry.plan_date }}</strong> · {{ entry.content }}{% if entry.is_manual %} <span class="muted">(직접 수정)</span>{% endif %}
           <details><summary>일정 수정</summary>
             <form class="inline-edit" method="post" action="{{ url_for('edit_study_plan', assignment_id=assignment.id, entry_id=entry.id) }}">
               <input type="hidden" name="csrf_token" value="{{ csrf_token }}">

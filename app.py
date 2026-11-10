@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).resolve().parent / '.env')
 from services.gemini_service import analyze_notice, analyze_document, GeminiAnalysisError
 from features.auth import register_auth
-from features.planning import register_planning, dashboard_planning
+from features.planning import register_planning, dashboard_planning, maybe_auto_replan
 from features.backup import register_backup
 from features.attachments import register_attachments, cleanup_assignment_files
 
@@ -68,6 +68,10 @@ def init_db():
             connection.execute("ALTER TABLE assignments ADD COLUMN priority TEXT NOT NULL DEFAULT 'medium'")
         if "owner_id" not in columns:
             connection.execute("ALTER TABLE assignments ADD COLUMN owner_id INTEGER")
+        if "auto_replan_enabled" not in columns:
+            connection.execute("ALTER TABLE assignments ADD COLUMN auto_replan_enabled INTEGER NOT NULL DEFAULT 0")
+        if "replan_pending" not in columns:
+            connection.execute("ALTER TABLE assignments ADD COLUMN replan_pending INTEGER NOT NULL DEFAULT 0")
         connection.execute("CREATE INDEX IF NOT EXISTS idx_assignments_owner ON assignments(owner_id)")
         connection.execute("""CREATE TABLE IF NOT EXISTS checklist_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -382,6 +386,12 @@ def create_app(test_config=None):
                         (values["title"], values["course"], values["description"], values["due_date"] or None, values["status"], values["priority"], assignment_id, current_owner_id()),
                     )
                 flash("과제가 수정되었습니다.", "success")
+                changed = any(
+                    (values[key] or "") != (assignment[key] or "")
+                    for key in ("title", "description", "due_date", "priority")
+                )
+                if changed:
+                    maybe_auto_replan(connect_db, assignment_id, current_owner_id())
                 return redirect(url_for("assignment_detail", assignment_id=assignment_id))
             return render_template("assignment_form.html", values=values, errors=errors, editing=True, assignment=assignment), 400
         return render_template("assignment_form.html", values=dict(assignment), errors=[], editing=True, assignment=assignment)
@@ -408,6 +418,7 @@ def create_app(test_config=None):
                     (assignment_id, content),
                 )
             flash("할 일이 추가되었습니다.", "success")
+            maybe_auto_replan(connect_db, assignment_id, current_owner_id())
         return redirect(url_for("assignment_detail", assignment_id=assignment_id))
 
     @app.post("/assignments/<int:assignment_id>/checklist/<int:item_id>/toggle")
@@ -420,6 +431,7 @@ def create_app(test_config=None):
             )
             if cursor.rowcount == 0:
                 abort(404)
+        maybe_auto_replan(connect_db, assignment_id, current_owner_id())
         return redirect(url_for("assignment_detail", assignment_id=assignment_id))
 
     @app.post("/assignments/<int:assignment_id>/checklist/<int:item_id>/edit")
@@ -437,6 +449,7 @@ def create_app(test_config=None):
             if cursor.rowcount == 0:
                 abort(404)
         flash("할 일이 수정되었습니다.", "success")
+        maybe_auto_replan(connect_db, assignment_id, current_owner_id())
         return redirect(url_for("assignment_detail", assignment_id=assignment_id))
 
     @app.post("/assignments/<int:assignment_id>/checklist/<int:item_id>/delete")
@@ -450,6 +463,7 @@ def create_app(test_config=None):
             if cursor.rowcount == 0:
                 abort(404)
         flash("할 일이 삭제되었습니다.", "success")
+        maybe_auto_replan(connect_db, assignment_id, current_owner_id())
         return redirect(url_for("assignment_detail", assignment_id=assignment_id))
 
     @app.post("/assignments/<int:assignment_id>/notes")
