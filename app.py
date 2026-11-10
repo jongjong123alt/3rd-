@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).resolve().parent / '.env')
 from services.gemini_service import analyze_notice, analyze_document, GeminiAnalysisError
 from features.auth import register_auth
+from features.public import register_public
 from features.planning import register_planning, dashboard_planning, maybe_auto_replan
 from features.backup import register_backup
 from features.attachments import register_attachments, cleanup_assignment_files
@@ -144,6 +145,7 @@ def create_app(test_config=None):
         app.config.update(test_config)
     init_db()
     register_auth(app, connect_db)
+    register_public(app)
     register_planning(app, connect_db, get_assignment, current_owner_id)
     register_backup(app, connect_db, current_owner_id, validate_form)
     register_attachments(app, connect_db, get_assignment, lambda: DB_PATH)
@@ -165,6 +167,11 @@ def create_app(test_config=None):
 
     @app.get("/")
     def dashboard():
+        # Public landing uses only static copy; never query private assignment data.
+        if session.get("user_id") is None and not app.config.get("TESTING"):
+            return render_template("public_home.html")
+        if session.get("user_id") is None and app.config.get("AUTH_REQUIRED", False):
+            return render_template("public_home.html")
         with connect_db() as connection:
             assignments = connection.execute(
                 "SELECT * FROM assignments WHERE owner_id IS ? ORDER BY CASE WHEN due_date IS NULL OR due_date = '' THEN 1 ELSE 0 END, due_date ASC, id DESC",

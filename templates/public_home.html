@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}과제 노트 · AI 과제 분석 및 일정 관리{% endblock %}
+{% block breadcrumb %}서비스 소개{% endblock %}
+{% block content %}
+<section class="content public-content">
+  <div class="public-eyebrow">AI 기반 과제 분석 및 일정 관리</div>
+  <h1>과제 공지부터 마감 일정까지,<br>한곳에서 관리하세요.</h1>
+  <p class="intro">로그인 없이 주요 기능을 둘러볼 수 있습니다. 실제 과제 등록, 개인 데이터 조회, AI 분석은 로그인 후 이용할 수 있어요.</p>
+  <div class="public-actions">
+    <a class="primary-button" href="{{ url_for('login') }}">로그인하고 시작하기</a>
+    <a class="secondary-button" href="{{ url_for('register') }}">회원가입</a>
+    <a class="secondary-button" href="{{ url_for('public_features') }}">전체 기능 보기 (21개)</a>
+  </div>
+  <div class="public-grid">
+    <a class="public-card" href="{{ url_for('feature_preview', slug='dashboard') }}"><span class="public-card-icon">▤</span><strong>과제 대시보드</strong><span>마감일·진행 상태·우선순위를 한눈에</span><small>화면 미리보기 →</small></a>
+    <a class="public-card" href="{{ url_for('feature_preview', slug='ai') }}"><span class="public-card-icon">✧</span><strong>Gemini AI 분석</strong><span>공지문·PDF·이미지를 분석하고 일정 제안</span><small>화면 미리보기 →</small></a>
+    <a class="public-card" href="{{ url_for('feature_preview', slug='calendar') }}"><span class="public-card-icon">▦</span><strong>마감 달력</strong><span>월별 제출기한과 과제 일정 정리</span><small>화면 미리보기 →</small></a>
+    <a class="public-card" href="{{ url_for('feature_preview', slug='schedule') }}"><span class="public-card-icon">⚑</span><strong>일정 충돌 확인</strong><span>마감일이 겹치는 과제를 미리 확인</span><small>화면 미리보기 →</small></a>
+  </div>
+  <div class="public-notice"><strong>안내</strong> 아래 미리보기는 예시 데이터로 구성되어 있습니다. 다른 사용자의 과제나 실제 개인 정보는 공개되지 않습니다.</div>
+</section>
+{% endblock %}

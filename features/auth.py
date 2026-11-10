@@ -14,7 +14,8 @@ def register_auth(app, connect_db):
     def require_login():
         if app.config.get("TESTING") and not app.config.get("AUTH_REQUIRED", False):
             return
-        if request.endpoint in ("login", "register", "static", "health") or request.endpoint is None:
+        if request.endpoint in ("login", "register", "static", "health",
+                                "dashboard", "public_features", "feature_preview") or request.endpoint is None:
             return
         if session.get("user_id") is None:
             if request.method == "GET":
