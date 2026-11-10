@@ -56,9 +56,55 @@ class NewFeaturesTests(unittest.TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertIn("과제 공지", response.get_data(as_text=True))
                 self.assertIn("ai-save-form", response.get_data(as_text=True))
-                analyze.assert_called_once_with(contents, mime)
+                analyze.assert_called_once_with(contents, mime, "")
         with project.connect_db() as db:
             self.assertEqual(db.execute("SELECT COUNT(*) FROM assignments").fetchone()[0], 0)
+
+    def test_combined_notice_and_file_sent_in_single_ai_request(self):
+        notice = "교수님 추가 요구사항: PDF 3쪽 이내, 참고문헌 필수"
+        answer = {"title": "통합 분석", "course": "자료구조", "due_date": "",
+                  "summary": "요구사항과 파일을 함께 확인", "deliverables": ["PDF 보고서"],
+                  "tasks": ["참고문헌 정리"]}
+        with patch("app.analyze_document", return_value=answer) as analyze, \
+             patch("app.analyze_notice") as text_only:
+            response = self.client.post("/ai/analyze", data={
+                "csrf_token": self.token, "notice": notice,
+                "document": (io.BytesIO(b"%PDF-1.4\\ncontent"), "notice.pdf"),
+            }, content_type="multipart/form-data")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("통합 분석", response.get_data(as_text=True))
+        self.assertIn("PDF 보고서", response.get_data(as_text=True))
+        analyze.assert_called_once_with(b"%PDF-1.4\\ncontent", "application/pdf", notice)
+        text_only.assert_not_called()
+
+    def test_text_only_notice_still_supported(self):
+        result = {"title": "텍스트 공지", "course": "", "due_date": "",
+                  "summary": "요약", "deliverables": [], "tasks": []}
+        with patch("app.analyze_notice", return_value=result) as analyze:
+            response = self.post("/ai/analyze", notice="텍스트 과제 요구사항")
+        self.assertEqual(response.status_code, 200)
+        analyze.assert_called_once_with("텍스트 과제 요구사항")
+
+    def test_empty_text_and_file_rejected(self):
+        with patch("app.analyze_notice") as analyze, patch("app.analyze_document") as document:
+            response = self.post("/ai/analyze", notice="   ")
+        self.assertEqual(response.status_code, 400)
+        analyze.assert_not_called()
+        document.assert_not_called()
+
+    def test_multimodal_prompt_contains_user_requirements(self):
+        payload = {"title": "통합 과제", "course": "", "due_date": "",
+                   "summary": "두 입력 확인", "deliverables": ["PDF"], "tasks": ["검토"]}
+        fake_client = MagicMock()
+        fake_client.__enter__.return_value.models.generate_content.return_value.text = json.dumps(payload)
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "fake-test-key"}):
+            with patch("services.gemini_service.genai.Client", return_value=fake_client):
+                result = analyze_document(b"%PDF-1.4", "application/pdf",
+                                          "A4 3쪽, PDF 제출, 참고문헌 포함")
+        self.assertEqual(result["title"], "통합 과제")
+        kwargs = fake_client.__enter__.return_value.models.generate_content.call_args.kwargs
+        self.assertIn("A4 3쪽", str(kwargs["contents"]))
+        self.assertIn("application/pdf", str(kwargs["contents"]))
 
     def test_f19_rejects_bad_extension_magic_oversize_and_missing_csrf(self):
         cases = [("test.svg", b"<svg/>"), ("test.pdf", b"not-a-pdf"),

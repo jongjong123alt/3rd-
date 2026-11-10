@@ -83,29 +83,14 @@ class Features13To17Tests(unittest.TestCase):
         valid = validate_plan({"entries": [{"date": today.isoformat(), "task": "계획 작성"}]}, today, today)
         self.assertEqual(valid[0]["task"], "계획 작성")
 
-    def test_f16_restore_merge_and_invalid_backup(self):
+    def test_backup_routes_are_removed_without_deleting_assignments(self):
         a = self.create("원본 과제")
-        self.post(f"/assignments/{a}/checklist", content="할 일")
-        self.post(f"/assignments/{a}/notes", kind="note", content="참고 메모")
-        original = self.client.get("/export/backup.json").get_data()
-        response = self.client.post("/backup/restore", data={
-            "csrf_token": self.token, "confirm": "yes",
-            "backup": (io.BytesIO(original), "backup.json")
-        }, content_type="multipart/form-data")
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.client.get("/export/backup.json").status_code, 404)
+        self.assertEqual(self.client.get("/export/assignments.csv").status_code, 404)
+        self.assertEqual(self.client.get("/backup/restore").status_code, 404)
+        self.assertEqual(self.post("/backup/restore", confirm="yes").status_code, 404)
         with project.connect_db() as db:
-            self.assertEqual(db.execute("SELECT COUNT(*) FROM assignments").fetchone()[0], 2)
-            self.assertEqual(db.execute("SELECT COUNT(*) FROM checklist_items").fetchone()[0], 2)
-            self.assertEqual(db.execute("SELECT COUNT(*) FROM assignment_notes").fetchone()[0], 2)
-        malformed = json.dumps({"format_version": 1, "assignments": [
-            {"id": 1, "title": "x", "status": "invalid"}],
-            "checklist_items": [], "assignment_notes": []}).encode()
-        self.client.post("/backup/restore", data={
-            "csrf_token": self.token, "confirm": "yes",
-            "backup": (io.BytesIO(malformed), "bad.json")
-        }, content_type="multipart/form-data")
-        with project.connect_db() as db:
-            self.assertEqual(db.execute("SELECT COUNT(*) FROM assignments").fetchone()[0], 2)
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM assignments WHERE id=?", (a,)).fetchone()[0], 1)
 
     def test_f17_attachment_upload_download_delete_and_validation(self):
         a = self.create("첨부 과제")
@@ -177,7 +162,7 @@ class AuthIsolationTests(unittest.TestCase):
         self.update_token()
         self.assertNotIn("이전 과제", self.client.get("/").get_data(as_text=True))
         self.assertEqual(self.client.get(f"/assignments/{first_id}").status_code, 404)
-        self.assertEqual(self.client.get("/export/backup.json").json["assignments"], [])
+        self.assertEqual(self.client.get("/export/backup.json").status_code, 404)
         self.assertEqual(self.post("/auth/logout").status_code, 302)
         self.client.get("/auth/login")
         self.update_token()

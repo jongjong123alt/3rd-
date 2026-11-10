@@ -60,8 +60,7 @@ class PublicPreviewTests(unittest.TestCase):
 
     def test_guest_private_get_redirects_to_login(self):
         for path in ("/assignments/new", "/assignments/1", "/calendar",
-                     "/schedule", "/ai/analyze", "/export/backup.json",
-                     "/export/assignments.csv", "/backup/restore"):
+                     "/schedule", "/ai/analyze"):
             with self.subTest(path=path):
                 response = self.client.get(path)
                 self.assertEqual(response.status_code, 302)
@@ -77,7 +76,6 @@ class PublicPreviewTests(unittest.TestCase):
                 ("/assignments/1/plan", {}),
                 ("/assignments/1/auto-replan", {"enabled": "yes"}),
                 ("/assignments/1/checklist", {"content": "몰래 추가"}),
-                ("/backup/restore", {"confirm": "yes"}),
             ]
             for path, form in cases:
                 with self.subTest(path=path):
