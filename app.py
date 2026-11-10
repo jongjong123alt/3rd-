@@ -12,7 +12,7 @@ from flask import Flask, Response, abort, flash, jsonify, redirect, render_templ
 from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parent / '.env')
-from services.gemini_service import analyze_notice, GeminiAnalysisError
+from services.gemini_service import analyze_notice, analyze_document, GeminiAnalysisError
 from features.auth import register_auth
 from features.planning import register_planning, dashboard_planning
 from features.backup import register_backup
@@ -568,6 +568,35 @@ def create_app(test_config=None):
         except GeminiAnalysisError as exc:
             return render_template("ai_analyze.html", notice=notice, result=None, error=str(exc)), 502
         return render_template("ai_analyze.html", notice=notice, result=result, error=None)
+
+    @app.post("/ai/analyze-file")
+    def ai_analyze_file():
+        upload = request.files.get("document")
+        if upload is None or not upload.filename:
+            return render_template("ai_analyze.html", notice="", result=None,
+                                   error="PDF 또는 이미지 파일을 선택해 주세요."), 400
+        filename = upload.filename.replace("\\", "/").rsplit("/", 1)[-1]
+        extension = Path(filename).suffix.lower()
+        supported = {".pdf": "application/pdf", ".png": "image/png",
+                     ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
+        if extension not in supported:
+            return render_template("ai_analyze.html", notice="", result=None,
+                                   error="PDF, PNG, JPG 파일만 분석할 수 있습니다."), 400
+        data = upload.stream.read(5 * 1024 * 1024 + 1)
+        if not data or len(data) > 5 * 1024 * 1024:
+            return render_template("ai_analyze.html", notice="", result=None,
+                                   error="파일은 5MB 이하이며 비어 있지 않아야 합니다."), 400
+        valid = (data.startswith(b"%PDF-") if extension == ".pdf" else
+                 data.startswith(b"\\x89PNG\\r\\n\\x1a\\n") if extension == ".png" else
+                 data.startswith(b"\\xff\\xd8\\xff"))
+        if not valid:
+            return render_template("ai_analyze.html", notice="", result=None,
+                                   error="파일 형식이 확장자와 일치하지 않습니다."), 400
+        try:
+            result = analyze_document(data, supported[extension])
+        except GeminiAnalysisError as exc:
+            return render_template("ai_analyze.html", notice="", result=None, error=str(exc)), 502
+        return render_template("ai_analyze.html", notice="", result=result, error=None)
 
     @app.post("/ai/save")
     def ai_save():

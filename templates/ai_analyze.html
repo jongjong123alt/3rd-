@@ -28,6 +28,31 @@
     <p class="muted">공지문에 개인정보나 API 키를 포함하지 마세요. 입력 내용은 Gemini API로 전송됩니다.</p>
     <div class="form-actions"><button class="primary-button" id="ai-submit-button" type="submit">✧ AI 분석하기</button></div>\n    <p class="muted" id="ai-loading-status" role="status" aria-live="polite" hidden>AI가 공지문을 분석하고 있습니다. 잠시 기다려 주세요.</p>
   </form>
+  <section class="feature-panel" aria-labelledby="file-analysis-heading">
+    <h2 id="file-analysis-heading">PDF·이미지 공지 분석</h2>
+    <p class="muted">텍스트를 복사하기 어려운 공지문을 파일로 분석합니다. PDF·PNG·JPG, 최대 5MB. 첨부 내용은 Gemini API로 전송되며 이 앱에 원본을 저장하지 않습니다.</p>
+    <form class="assignment-form" id="ai-file-form" method="post" enctype="multipart/form-data" action="{{ url_for('ai_analyze_file') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label for="ai-document">과제 공지 파일</label>
+      <input id="ai-document" type="file" name="document" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" required>
+      <button class="secondary-button" type="submit" id="ai-file-button">✧ 파일 AI 분석하기</button>
+      <p class="muted" id="ai-file-status" role="status" hidden>파일을 Gemini로 분석하고 있습니다. 잠시 기다려 주세요.</p>
+    </form>
+  </section>
+  <script>
+    (() => {
+      const form = document.getElementById('ai-file-form');
+      const button = document.getElementById('ai-file-button');
+      const status = document.getElementById('ai-file-status');
+      form.addEventListener('submit', event => {
+        if (!form.checkValidity()) return;
+        if (button.disabled) { event.preventDefault(); return; }
+        button.disabled = true;
+        button.textContent = '파일 분석 중...';
+        status.hidden = false;
+      });
+    })();
+  </script>
   {% if error %}<div class="form-errors" role="alert"><p>{{ error }}</p></div>{% endif %}
   {% if result %}
   <section class="analysis-result" aria-labelledby="analysis-heading">
