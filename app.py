@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 import calendar
 from pathlib import Path
 import os
@@ -114,7 +114,36 @@ def create_app(test_config=None):
             "doing": sum(a["status"] == "doing" for a in assignments),
             "upcoming": sum(bool(a["due_date"]) and a["due_date"] >= today and a["status"] != "done" for a in assignments),
         }
-        return render_template("dashboard.html", assignments=assignments, counts=counts)
+        # F-07: keep summary counts global; filter only the displayed list.
+        query = request.args.get("q", "").strip()[:120]
+        status_filter = request.args.get("status", "all")
+        deadline_filter = request.args.get("deadline", "all")
+        if status_filter not in ("all", "todo", "doing", "done"):
+            status_filter = "all"
+        if deadline_filter not in ("all", "overdue", "week", "no_due"):
+            deadline_filter = "all"
+        visible = assignments
+        if query:
+            needle = query.casefold()
+            visible = [a for a in visible if any(
+                needle in (a[field] or "").casefold()
+                for field in ("title", "course", "description")
+            )]
+        if status_filter != "all":
+            visible = [a for a in visible if a["status"] == status_filter]
+        if deadline_filter == "overdue":
+            visible = [a for a in visible if a["due_date"] and a["due_date"] < today and a["status"] != "done"]
+        elif deadline_filter == "week":
+            end = (date.today() + timedelta(days=7)).isoformat()
+            visible = [a for a in visible if a["due_date"] and today <= a["due_date"] <= end and a["status"] != "done"]
+        elif deadline_filter == "no_due":
+            visible = [a for a in visible if not a["due_date"]]
+        return render_template(
+            "dashboard.html", assignments=visible, counts=counts,
+            filters={"q": query, "status": status_filter, "deadline": deadline_filter},
+            filtered_count=len(visible),
+            filters_active=bool(query or status_filter != "all" or deadline_filter != "all"),
+        )
 
     @app.get("/calendar")
     def calendar_view():
