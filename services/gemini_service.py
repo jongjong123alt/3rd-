@@ -4,12 +4,16 @@ This module never writes analysis results to the database.
 """
 from datetime import date
 import json
+import logging
 import os
 import truststore
 truststore.inject_into_ssl()
 
 from google import genai
 from google.genai import errors, types
+
+
+logger = logging.getLogger(__name__)
 
 
 class GeminiAnalysisError(Exception):
@@ -176,7 +180,14 @@ def analyze_document(document_bytes, mime_type, notice=""):
     try:
         with genai.Client(
             api_key=api_key,
-            http_options=types.HttpOptions(timeout=30000),
+            http_options=types.HttpOptions(
+                timeout=90000,
+                retry_options=types.HttpRetryOptions(
+                    attempts=2,
+                    initial_delay=1.0,
+                    http_status_codes=[429, 500, 502, 503, 504],
+                ),
+            ),
         ) as client:
             response = client.models.generate_content(
                 model=model_name,
@@ -207,16 +218,41 @@ def analyze_document(document_bytes, mime_type, notice=""):
     except GeminiAnalysisError:
         raise
     except errors.APIError as exc:
-        if exc.code in (401, 403):
-            message = "Gemini API 키 또는 사용 권한을 확인해 주세요."
-        elif exc.code == 404:
-            message = "Gemini 모델을 찾을 수 없습니다. .env의 GEMINI_MODEL을 확인해 주세요."
-        elif exc.code == 429:
+        # Do not display SDK error text: it may contain request metadata.
+        code = getattr(exc, "code", None)
+        logger.warning("Gemini document API request failed (HTTP %s)", code)
+        if code in (401, 403):
+            message = "Gemini API 키 또는 사용 권한을 확인해 주세요(401/403)."
+        elif code == 400:
+            message = ("Gemini가 첨부파일 분석 요청을 거부했습니다(400). "
+                       "파일이 손상되었거나 현재 Gemini 모델이 파일 형식을 지원하지 않을 수 있습니다.")
+        elif code == 404:
+            message = "Gemini 모델을 찾을 수 없습니다(404). .env의 GEMINI_MODEL을 확인해 주세요."
+        elif code == 413:
+            message = "Gemini가 파일 크기를 허용하지 않았습니다(413). 더 작은 파일로 시도해 주세요."
+        elif code == 429:
             message = "Gemini 요청 한도를 초과했습니다(429). 잠시 후 다시 시도해 주세요."
-        elif exc.code in (503, 504):
-            message = "Gemini 서버가 혼잡하거나 응답 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요."
+        elif code in (500, 502, 503, 504):
+            message = f"Gemini 서버 오류({code})입니다. 잠시 후 다시 시도해 주세요."
         else:
-            message = "Gemini 문서 분석 요청에 실패했습니다."
+            message = "Gemini 문서 분석 요청에 실패했습니다. 서버의 HTTP 오류 코드를 확인해 주세요."
         raise GeminiAnalysisError(message) from exc
     except Exception as exc:
-        raise GeminiAnalysisError("문서 분석에 실패했습니다. 네트워크와 파일 상태를 확인해 주세요.") from exc
+        # Only log the exception type, never the uploaded notice, file, or API key.
+        kind = type(exc).__name__
+        logger.warning("Gemini document analysis unexpected exception type=%s", kind)
+        name = kind.lower()
+        if isinstance(exc, (TimeoutError,)) or "timeout" in name or "deadline" in name:
+            message = ("Gemini 문서 분석 응답 시간이 초과되었습니다. "
+                       "PDF 페이지 수나 이미지 크기를 줄여 다시 시도해 주세요.")
+        elif "ssl" in name or "certificate" in name:
+            message = "SSL 인증서 검증 오류입니다. Python 인증서 및 네트워크 설정을 확인해 주세요."
+        elif "connect" in name or "network" in name or "proxy" in name:
+            message = "Gemini 서버에 연결할 수 없습니다. 인터넷·프록시·방화벽 설정을 확인해 주세요."
+        elif "json" in name or "validation" in name or "valueerror" in name or "typeerror" in name:
+            message = ("Gemini 응답 또는 요청 형식 처리에 실패했습니다. "
+                       "사용 중인 Gemini 모델과 google-genai 패키지 버전을 확인해 주세요.")
+        else:
+            message = ("문서 분석 처리 중 오류가 발생했습니다. "
+                       f"서버 콘솔에 기록된 예외 종류({kind})를 확인해 주세요.")
+        raise GeminiAnalysisError(message) from exc

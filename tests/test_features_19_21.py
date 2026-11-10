@@ -106,6 +106,28 @@ class NewFeaturesTests(unittest.TestCase):
         self.assertIn("A4 3쪽", str(kwargs["contents"]))
         self.assertIn("application/pdf", str(kwargs["contents"]))
 
+    def test_multimodal_timeout_reports_actionable_message(self):
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "fake-test-key"}):
+            with patch("services.gemini_service.genai.Client", side_effect=TimeoutError()):
+                with self.assertRaises(GeminiAnalysisError) as raised:
+                    analyze_document(b"%PDF-1.4", "application/pdf", "공지")
+        self.assertIn("시간이 초과", str(raised.exception))
+
+    def test_multimodal_connection_error_reports_network(self):
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "fake-test-key"}):
+            with patch("services.gemini_service.genai.Client", side_effect=ConnectionError()):
+                with self.assertRaises(GeminiAnalysisError) as raised:
+                    analyze_document(b"%PDF-1.4", "application/pdf", "공지")
+        self.assertIn("연결할 수 없습니다", str(raised.exception))
+
+    def test_multimodal_unexpected_error_identifies_safe_type(self):
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "fake-test-key"}):
+            with patch("services.gemini_service.genai.Client", side_effect=RuntimeError("private info")):
+                with self.assertRaises(GeminiAnalysisError) as raised:
+                    analyze_document(b"%PDF-1.4", "application/pdf", "공지")
+        self.assertIn("RuntimeError", str(raised.exception))
+        self.assertNotIn("private info", str(raised.exception))
+
     def test_f19_rejects_bad_extension_magic_oversize_and_missing_csrf(self):
         cases = [("test.svg", b"<svg/>"), ("test.pdf", b"not-a-pdf"),
                  ("test.png", b"not-a-png"), ("test.jpg", b"not-a-jpeg"),
