@@ -16,7 +16,6 @@ from services.gemini_service import analyze_notice, analyze_document, GeminiAnal
 from features.auth import register_auth
 from features.public import register_public
 from features.planning import register_planning, dashboard_planning, maybe_auto_replan
-from features.backup import register_backup
 from features.attachments import register_attachments, cleanup_assignment_files
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -147,7 +146,6 @@ def create_app(test_config=None):
     register_auth(app, connect_db)
     register_public(app)
     register_planning(app, connect_db, get_assignment, current_owner_id)
-    register_backup(app, connect_db, current_owner_id, validate_form)
     register_attachments(app, connect_db, get_assignment, lambda: DB_PATH)
 
     @app.before_request
@@ -520,112 +518,50 @@ def create_app(test_config=None):
         flash("진행 기록이 삭제되었습니다.", "success")
         return redirect(url_for("assignment_detail", assignment_id=assignment_id) + "#assignment-notes")
 
-    @app.get("/export/backup.json")
-    def export_backup_json():
-        # Export contains private data: keep this endpoint local-only until login exists.
-        if request.remote_addr not in ("127.0.0.1", "::1"):
-            abort(403)
-        with connect_db() as connection:
-            assignments = [dict(row) for row in connection.execute(
-                "SELECT * FROM assignments WHERE owner_id IS ? ORDER BY id", (current_owner_id(),)
-            ).fetchall()]
-            checklist = [dict(row) for row in connection.execute(
-                "SELECT * FROM checklist_items WHERE assignment_id IN "
-                "(SELECT id FROM assignments WHERE owner_id IS ?) ORDER BY id", (current_owner_id(),)
-            ).fetchall()]
-            notes = [dict(row) for row in connection.execute(
-                "SELECT * FROM assignment_notes WHERE assignment_id IN "
-                "(SELECT id FROM assignments WHERE owner_id IS ?) ORDER BY id", (current_owner_id(),)
-            ).fetchall()]
-            plans = [dict(row) for row in connection.execute(
-                "SELECT * FROM study_plan WHERE assignment_id IN "
-                "(SELECT id FROM assignments WHERE owner_id IS ?) ORDER BY id", (current_owner_id(),)
-            ).fetchall()]
-        payload = {
-            "format_version": 1,
-            "exported_at_utc": datetime.now(timezone.utc).isoformat(),
-            "assignments": assignments,
-            "checklist_items": checklist,
-            "assignment_notes": notes,
-            "study_plan": plans,
-        }
-        return Response(
-            json.dumps(payload, ensure_ascii=False, indent=2),
-            content_type="application/json; charset=utf-8",
-            headers={"Content-Disposition": 'attachment; filename="assignments-backup.json"',
-                     "Cache-Control": "no-store"},
-        )
-
-    @app.get("/export/assignments.csv")
-    def export_assignments_csv():
-        if request.remote_addr not in ("127.0.0.1", "::1"):
-            abort(403)
-        # Escape spreadsheet formula prefixes in untrusted user-entered fields.
-        def safe_cell(value):
-            value = "" if value is None else str(value)
-            if value.lstrip().startswith(("=", "+", "-", "@")) or value.startswith(("\t", "\r", "\n")):
-                return "'" + value
-            return value
-        with connect_db() as connection:
-            assignments = connection.execute(
-                "SELECT id, title, course, description, due_date, status, priority, created_at "
-                "FROM assignments WHERE owner_id IS ? ORDER BY id", (current_owner_id(),)
-            ).fetchall()
-        output = io.StringIO(newline="")
-        writer = csv.writer(output)
-        columns = ("id", "title", "course", "description", "due_date", "status", "priority", "created_at")
-        writer.writerow(columns)
-        for assignment in assignments:
-            writer.writerow([safe_cell(assignment[key]) for key in columns])
-        return Response(
-            "\ufeff" + output.getvalue(),
-            content_type="text/csv; charset=utf-8",
-            headers={"Content-Disposition": 'attachment; filename="assignments.csv"',
-                     "Cache-Control": "no-store"},
-        )
-
     @app.route("/ai/analyze", methods=["GET", "POST"])
+    @app.post("/ai/analyze-file")
     def ai_analyze():
+        # F-19 combined mode: user notice + PDF/image are analyzed in ONE request.
         if request.method == "GET":
             return render_template("ai_analyze.html", notice="", result=None, error=None)
         notice = request.form.get("notice", "").strip()
-        if not notice or len(notice) > 10000:
+        if len(notice) > 10000:
             return render_template("ai_analyze.html", notice=notice[:10000], result=None,
-                                   error="공지문은 1~10,000자로 입력해 주세요."), 400
-        try:
-            result = analyze_notice(notice)
-        except GeminiAnalysisError as exc:
-            return render_template("ai_analyze.html", notice=notice, result=None, error=str(exc)), 502
-        return render_template("ai_analyze.html", notice=notice, result=result, error=None)
-
-    @app.post("/ai/analyze-file")
-    def ai_analyze_file():
+                                   error="공지문은 최대 10,000자까지 입력할 수 있습니다."), 400
         upload = request.files.get("document")
-        if upload is None or not upload.filename:
+        has_file = upload is not None and bool(upload.filename)
+        if not notice and not has_file:
             return render_template("ai_analyze.html", notice="", result=None,
-                                   error="PDF 또는 이미지 파일을 선택해 주세요."), 400
-        filename = upload.filename.replace("\\", "/").rsplit("/", 1)[-1]
-        extension = Path(filename).suffix.lower()
-        supported = {".pdf": "application/pdf", ".png": "image/png",
-                     ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
-        if extension not in supported:
-            return render_template("ai_analyze.html", notice="", result=None,
-                                   error="PDF, PNG, JPG 파일만 분석할 수 있습니다."), 400
-        data = upload.stream.read(5 * 1024 * 1024 + 1)
-        if not data or len(data) > 5 * 1024 * 1024:
-            return render_template("ai_analyze.html", notice="", result=None,
-                                   error="파일은 5MB 이하이며 비어 있지 않아야 합니다."), 400
-        valid = (data.startswith(b"%PDF-") if extension == ".pdf" else
-                 data.startswith(b"\x89PNG\r\n\x1a\n") if extension == ".png" else
-                 data.startswith(b"\xff\xd8\xff"))
-        if not valid:
-            return render_template("ai_analyze.html", notice="", result=None,
-                                   error="파일 형식이 확장자와 일치하지 않습니다."), 400
-        try:
-            result = analyze_document(data, supported[extension])
-        except GeminiAnalysisError as exc:
-            return render_template("ai_analyze.html", notice="", result=None, error=str(exc)), 502
-        return render_template("ai_analyze.html", notice="", result=result, error=None)
+                                   error="공지문을 입력하거나 PDF·이미지 파일을 첨부해 주세요."), 400
+
+        if has_file:
+            filename = upload.filename.replace("\\", "/").rsplit("/", 1)[-1]
+            extension = Path(filename).suffix.lower()
+            supported = {".pdf": "application/pdf", ".png": "image/png",
+                         ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
+            if extension not in supported:
+                return render_template("ai_analyze.html", notice=notice, result=None,
+                                       error="PDF, PNG, JPG 파일만 분석할 수 있습니다."), 400
+            data = upload.stream.read(5 * 1024 * 1024 + 1)
+            if not data or len(data) > 5 * 1024 * 1024:
+                return render_template("ai_analyze.html", notice=notice, result=None,
+                                       error="파일은 5MB 이하이며 비어 있지 않아야 합니다."), 400
+            valid = (data.startswith(b"%PDF-") if extension == ".pdf" else
+                     data.startswith(b"\x89PNG\r\n\x1a\n") if extension == ".png" else
+                     data.startswith(b"\xff\xd8\xff"))
+            if not valid:
+                return render_template("ai_analyze.html", notice=notice, result=None,
+                                       error="파일 형식이 확장자와 일치하지 않습니다."), 400
+            try:
+                result = analyze_document(data, supported[extension], notice)
+            except GeminiAnalysisError as exc:
+                return render_template("ai_analyze.html", notice=notice, result=None, error=str(exc)), 502
+        else:
+            try:
+                result = analyze_notice(notice)
+            except GeminiAnalysisError as exc:
+                return render_template("ai_analyze.html", notice=notice, result=None, error=str(exc)), 502
+        return render_template("ai_analyze.html", notice=notice, result=result, error=None)
 
     @app.post("/ai/save")
     def ai_save():
