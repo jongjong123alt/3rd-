@@ -23,6 +23,7 @@ class GeminiTests(unittest.TestCase):
                 "deliverables": ["PDF"], "tasks": ["자료 조사"]}
         fake_client = Mock()
         fake_client.models.generate_content.return_value.text = json.dumps(data, ensure_ascii=False)
+        fake_client.models.generate_content.return_value.candidates = []
         context = Mock()
         context.__enter__ = Mock(return_value=fake_client)
         context.__exit__ = Mock(return_value=False)
