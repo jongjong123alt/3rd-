@@ -29,7 +29,7 @@ class PublicPreviewTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         text = response.get_data(as_text=True)
         self.assertIn("로그인하고 시작하기", text)
-        self.assertIn("전체 기능 보기 (21개)", text)
+        self.assertIn("과제 노트 사용 장면 살펴보기", text)
         self.assertIn("서비스 소개 메뉴", text)
         self.assertNotIn('href="/preview/', text)
         for section in ('features', 'how-it-works', 'ai', 'faq'):
@@ -37,8 +37,13 @@ class PublicPreviewTests(unittest.TestCase):
         catalog = self.client.get("/features")
         self.assertEqual(catalog.status_code, 200)
         body = catalog.get_data(as_text=True)
-        for number in range(1, 22):
-            self.assertIn(f"F-{number:02d}", body)
+        self.assertNotIn('public-feature-grid', body)
+        self.assertNotIn('F-01', body)
+        for section in ('collect', 'check', 'deadline', 'analyze'):
+            self.assertIn(f'id="{section}"', body)
+            self.assertIn(f'href="#{section}"', body)
+        self.assertIn('Gemini API 키', body)
+        self.assertIn('실제 서비스 화면', body)
         for slug in ("dashboard", "assignments", "checklist", "ai",
                      "calendar", "schedule", "insights", "files", "alerts"):
             with self.subTest(slug=slug):

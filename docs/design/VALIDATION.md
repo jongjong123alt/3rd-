@@ -36,7 +36,7 @@ A system Chromium is required at `/usr/bin/chromium`; set `CHROMIUM_PATH` if nee
 
 The browser suite checks:
 
-- Public landing, all-feature catalog, fixed AI demo, login and registration views.
+- Public landing, product usage tour, fixed AI demo, login and registration views.
 - Signed-in dashboard, calendar, AI input, assignment form/detail, empty search, and deadline conflicts.
 - 1440, 390 and 320px layouts: page overflow, missing images, browser errors, axe WCAG 2 A/AA and WCAG 2.1 AA rule violations.
 - Mobile menu, Escape, actual form submission, create/edit/delete, checklist completion, upload, notes, search, logout and private-page redirects.
@@ -72,3 +72,7 @@ The public site now uses a horizontal navigation and a dedicated marketing layou
 - All browser functional flows passed against the disposable server.
 - 36 viewport/page checks completed with zero axe violations, page-overflow findings or browser errors after fixes.
 - See `browser-results.json` and the repository-root `design-qa.md` for evidence and scope.
+
+## Feature page follow-up
+
+`/features` now presents four usage scenes instead of the 21 internal feature cards. The homepage link now reads “과제 노트 사용 장면 살펴보기”. Existing tests were updated to verify public tour sections and privacy without depending on the retired F-number labels. See `FEATURE_TOUR.md` for source review, changes and screenshots.

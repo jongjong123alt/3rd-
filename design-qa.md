@@ -35,4 +35,12 @@ Automated verification: 36 viewport/page combinations at 1440/390/320px; no axe 
 
 No outstanding P0/P1/P2 findings for this update.
 
+## Feature tour update
+
+Reviewed the user-provided original feature grid and fresh public captures of Shovel and MyStudyLife. Replaced the 21-card catalog with four outcome-oriented scenes, real sample-data product images, working section links and honest AI explanation. No unsupported external-service functionality is presented as implemented.
+
+Visually reviewed the corrected desktop and mobile captures at `docs/design/features-desktop.png` and `docs/design/features-mobile.png`. Fixed the initially oversized context icon by limiting product-image styles to direct children. All four mobile chapter links are visible. Additional browser checks confirmed chapter navigation and login CTA. The existing 62 tests and 36 browser viewport/page checks passed. No remaining P0/P1/P2 issues.
+
+Research findings and evidence limits: `docs/design/FEATURE_TOUR.md`.
+
 final result: passed
