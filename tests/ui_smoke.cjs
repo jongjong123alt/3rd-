@@ -21,6 +21,12 @@ fs.mkdirSync("/tmp/campus-checks", { recursive: true });
   async function inspect(name, path, width = 1440) {
     await p.setViewportSize({ width, height: 1024 });
     await p.goto(base + path);
+    await p.evaluate(async () => {
+      for (const img of document.images) img.loading = "eager";
+      await Promise.all(
+        [...document.images].map((img) => img.decode().catch(() => {})),
+      );
+    });
     await p.screenshot({
       path: `/tmp/campus-checks/${name}-${width}.png`,
       fullPage: true,
@@ -66,6 +72,26 @@ fs.mkdirSync("/tmp/campus-checks", { recursive: true });
       await inspect(name, path, width);
   await p.setViewportSize({ width: 390, height: 844 });
   await p.goto(base + "/");
+  await p
+    .locator(".marketing-nav")
+    .getByRole("link", { name: "AI 분석", exact: true })
+    .click();
+  assert.equal(new URL(p.url()).hash, "#ai");
+  await p.locator(".faq-list summary").first().focus();
+  await p.keyboard.press("Enter");
+  assert.equal(
+    await p.locator(".faq-list details").first().getAttribute("open"),
+    "",
+  );
+  assert.equal(
+    await p.locator('.marketing-header a[href^="/preview/"]').count(),
+    0,
+  );
+  await p.goto(base + "/auth/login");
+  await p.locator("#username").fill("campus_test");
+  await p.locator("#password").fill("browser-test-password");
+  await p.locator(".assignment-form button[type=submit]").click();
+  await p.waitForURL(base + "/");
   await p.getByRole("button", { name: "메뉴 열기" }).click();
   assert.equal(
     await p
@@ -80,23 +106,6 @@ fs.mkdirSync("/tmp/campus-checks", { recursive: true });
       .getAttribute("aria-expanded"),
     "false",
   );
-  await p.getByRole("button", { name: "메뉴 열기" }).click();
-  await p
-    .locator(".sidebar")
-    .getByText("AI 분석 시연", { exact: true })
-    .click();
-  assert.equal(new URL(p.url()).pathname, "/preview/ai");
-  assert.equal(
-    await p
-      .getByRole("button", { name: "메뉴 열기" })
-      .getAttribute("aria-expanded"),
-    "false",
-  );
-  await p.goto(base + "/auth/login");
-  await p.locator("#username").fill("campus_test");
-  await p.locator("#password").fill("browser-test-password");
-  await p.locator(".assignment-form button[type=submit]").click();
-  await p.waitForURL(base + "/");
   for (const width of [1440, 390, 320])
     for (const [name, path] of [
       ["dashboard", "/"],
@@ -144,13 +153,11 @@ fs.mkdirSync("/tmp/campus-checks", { recursive: true });
     await p.locator(".check-text.checked").innerText(),
     "키보드로 요구사항 검토",
   );
-  await p
-    .locator("input[name=attachment]")
-    .setInputFiles({
-      name: "ux-check.txt",
-      mimeType: "text/plain",
-      buffer: Buffer.from("campus upload smoke"),
-    });
+  await p.locator("input[name=attachment]").setInputFiles({
+    name: "ux-check.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("campus upload smoke"),
+  });
   await p.locator("form:has(input[name=attachment]) button").click();
   await p.waitForLoadState();
   assert.match(await p.locator("#attachments").innerText(), /ux-check.txt/);

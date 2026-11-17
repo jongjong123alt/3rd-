@@ -30,7 +30,10 @@ class PublicPreviewTests(unittest.TestCase):
         text = response.get_data(as_text=True)
         self.assertIn("로그인하고 시작하기", text)
         self.assertIn("전체 기능 보기 (21개)", text)
-        self.assertIn("서비스 미리보기", text)
+        self.assertIn("서비스 소개 메뉴", text)
+        self.assertNotIn('href="/preview/', text)
+        for section in ('features', 'how-it-works', 'ai', 'faq'):
+            self.assertIn(f'id="{section}"', text)
         catalog = self.client.get("/features")
         self.assertEqual(catalog.status_code, 200)
         body = catalog.get_data(as_text=True)

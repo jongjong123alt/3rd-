@@ -25,4 +25,14 @@ Live Gemini response quality is not verified because an API key is absent. Exist
 
 No outstanding P0/P1/P2 visual or interaction findings. No deployment or environment publication performed.
 
+## Public homepage update
+
+The supplied MyStudyLife and Shovel screenshots were used for product-story structure, not copied branding or unsupported feature claims. The existing chosen forest/ivory theme remains the visual system.
+
+Opened and visually reviewed the new full-page desktop (1440px) and mobile (390px) captures in `docs/design/landing-desktop.png` and `docs/design/landing-mobile.png`. Confirmed: horizontal public navigation, prominent Korean hero copy, actual product image, three core features, calendar explanation, three-step guide, static AI example, keyboard-accessible FAQ and final login CTA. Public login/catalog pages use the same header. Private pages retain their sidebar and existing working forms.
+
+Automated verification: 36 viewport/page combinations at 1440/390/320px; no axe WCAG-rule violations, missing images, page overflow or browser errors. Functional smoke flow passed, including public section links, FAQ keyboard activation, private mobile navigation, CRUD, checklist, uploads, notes, search, missing-key handling and logout.
+
+No outstanding P0/P1/P2 findings for this update.
+
 final result: passed

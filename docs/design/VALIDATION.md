@@ -44,6 +44,17 @@ The browser suite checks:
 
 Reports and screenshots are written to `/tmp/campus-checks/`. Automated accessibility checks supplement visual and keyboard review; they do not certify full WCAG compliance.
 
+## Service introduction homepage
+
+The public site now uses a horizontal navigation and a dedicated marketing layout. The existing forest / ivory workspace is preserved after login. The structure combines the benefits-first presentation and concrete product screenshots of the supplied MyStudyLife reference with Shovel's clear onboarding story, using original Korean copy and the project's existing visual identity.
+
+- Public navigation links to the homepage's features, usage guide and AI explanation.
+- Individual feature-preview links are removed from the public navigation and feature catalog. Legacy preview routes remain compatible and retain privacy protections.
+- Product images are real application captures made with disposable sample assignments. Static images ship in `static/images/`; no private database queries are used for them.
+- FAQ answers cover local-only signup, optional Gemini keys and dashboard-only notification behavior. Native disclosures work with keyboard input.
+- No backend, schema, session or authentication policy change is needed for the homepage.
+- Browser checks include public section navigation, keyboard FAQ expansion and the existing signed-in mobile menu.
+
 ## Product details
 
 - Public examples stay explicitly labeled and never load private assignments.

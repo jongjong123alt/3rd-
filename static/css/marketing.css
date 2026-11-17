@@ -1,0 +1,823 @@
+/* Public product site. The signed-in workspace keeps its existing layout. */
+.public-site .main {
+  margin-left: 0;
+  width: 100%;
+}
+.marketing-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 26px;
+  padding: 17px max(28px, calc((100vw - 1280px) / 2));
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+  min-height: 84px;
+  position: relative;
+  z-index: 10;
+}
+.marketing-brand {
+  display: inline-flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--forest);
+  text-decoration: none;
+  white-space: nowrap;
+  letter-spacing: -0.8px;
+}
+.marketing-brand .brand-icon {
+  width: 38px;
+  height: 38px;
+}
+.marketing-nav {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+}
+.marketing-nav a,
+.marketing-login {
+  color: #405044;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.marketing-nav a:hover,
+.marketing-login:hover {
+  color: var(--forest);
+  text-decoration: underline;
+}
+.marketing-account {
+  display: flex;
+  gap: 23px;
+  align-items: center;
+}
+.marketing-account .primary-button {
+  font-size: 13px;
+}
+.marketing-home {
+  overflow: hidden;
+}
+.marketing-home section[id] {
+  scroll-margin-top: 25px;
+}
+.marketing-hero {
+  max-width: 1340px;
+  margin: auto;
+  padding: 88px 30px 62px;
+  display: grid;
+  grid-template-columns: 0.93fr 1.2fr;
+  align-items: center;
+  gap: 48px;
+}
+.marketing-eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.09em;
+  font-weight: 700;
+  color: var(--forest);
+  margin: 0 0 20px;
+}
+.marketing-hero h1 {
+  font-size: clamp(39px, 4.2vw, 62px);
+  line-height: 1.32;
+  letter-spacing: -2.5px;
+  margin: 23px 0 27px;
+  color: #202e25;
+}
+.marketing-hero h1 em {
+  font-style: normal;
+  color: #35664b;
+}
+.hero-description {
+  font-size: 16px;
+  line-height: 1.9;
+  color: #58645a;
+  word-break: keep-all;
+  margin: 0 0 30px;
+}
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+.hero-actions .primary-button {
+  padding: 15px 21px;
+  font-size: 14px;
+  min-height: 52px;
+}
+.hero-small {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 21px;
+}
+.hero-product {
+  margin: 0;
+  background: #edf2e7;
+  border: 1px solid #d3ddca;
+  border-radius: 18px;
+  padding: 23px 23px 0;
+  box-shadow: 0 20px 50px #24472e0c;
+  min-width: 0;
+}
+.product-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  color: var(--forest);
+  font-size: 11px;
+  margin-bottom: 20px;
+}
+.product-caption > span:first-child {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 700;
+}
+.product-caption > span:last-child {
+  color: #53614f;
+  font-size: 10px;
+}
+.hero-product > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: white;
+  box-shadow: 0 6px 20px #24472e0d;
+}
+.hero-product figcaption {
+  font-size: 12px;
+  color: #4f614c;
+  text-align: center;
+  padding: 21px 0;
+}
+.marketing-benefits {
+  max-width: 1280px;
+  margin: 0 auto 18px;
+  padding: 25px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 65px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  color: #4c5c4c;
+  font-size: 13px;
+}
+.marketing-benefits span {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.marketing-section {
+  max-width: 1280px;
+  margin: auto;
+  padding: 95px 30px;
+}
+.marketing-section-heading {
+  text-align: center;
+  margin: 0 0 48px;
+}
+.marketing-section-heading h2,
+.story-copy h2,
+.faq-section h2,
+.marketing-cta h2 {
+  font-size: 36px;
+  line-height: 1.45;
+  letter-spacing: -1.5px;
+  margin: 12px 0 18px;
+}
+.marketing-section-heading > p:last-child {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.marketing-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 45px;
+}
+.marketing-feature {
+  position: relative;
+  border-top: 1px solid #bcccb5;
+  padding: 27px 0 12px;
+}
+.marketing-feature .feature-icon {
+  width: 30px;
+  height: 30px;
+  margin-bottom: 20px;
+}
+.feature-number {
+  float: right;
+  font-size: 12px;
+  color: #62755d;
+  margin-top: 3px;
+}
+.marketing-feature h3 {
+  font-size: 18px;
+  margin: 0 0 15px;
+  line-height: 1.65;
+}
+.marketing-feature p,
+.story-copy > p:not(.marketing-eyebrow):not(.ai-disclosure),
+.how-steps p {
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--muted);
+  word-break: keep-all;
+}
+.feature-catalog-link {
+  display: flex;
+  justify-content: center;
+  margin: 28px auto 0;
+}
+.calendar-story {
+  display: grid;
+  grid-template-columns: 1.18fr 1fr;
+  align-items: center;
+  gap: 80px;
+  border-top: 1px solid var(--line);
+  padding-top: 80px;
+}
+.calendar-product {
+  margin: 0;
+  padding: 24px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  min-width: 0;
+}
+.calendar-product img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.calendar-product figcaption {
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 15px;
+}
+.story-copy .marketing-eyebrow {
+  margin-bottom: 18px;
+}
+.story-points {
+  list-style: none;
+  padding: 0;
+  margin: 25px 0 15px;
+}
+.story-points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: #415741;
+  padding: 9px 0;
+}
+.story-points .icon {
+  margin-top: 1px;
+}
+.how-section {
+  max-width: none;
+  background: var(--paper);
+  padding-inline: max(30px, calc((100vw - 1220px) / 2));
+}
+.how-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 45px;
+  list-style: none;
+  padding: 0;
+  margin: 0 auto;
+  max-width: 1220px;
+}
+.how-steps li {
+  border-top: 1px solid #c4d1bc;
+  padding-top: 25px;
+}
+.how-steps li > span {
+  color: var(--forest);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+.how-steps h3 {
+  font-size: 19px;
+  margin: 18px 0 12px;
+}
+.ai-story {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 90px;
+  align-items: center;
+}
+.ai-disclosure {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.85;
+  margin: 20px 0 0;
+}
+.ai-story .primary-button {
+  margin-top: 18px;
+}
+.ai-example {
+  border: 1px solid #bfcfb6;
+  border-radius: 15px;
+  padding: 27px;
+  background: #fcfdf9;
+}
+.example-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--forest);
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.example-label > span {
+  margin-left: auto;
+  font-weight: 400;
+  font-size: 10px;
+  color: var(--muted);
+}
+.example-input {
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+}
+.example-input > span,
+.example-result > span {
+  font-size: 11px;
+  color: #50634c;
+  font-weight: 600;
+}
+.example-input p {
+  font-size: 14px;
+  line-height: 1.9;
+  margin: 9px 0;
+  color: #465144;
+}
+.example-result {
+  padding-top: 22px;
+}
+.example-result h3 {
+  font-size: 19px;
+  margin: 10px 0;
+}
+.example-result p {
+  font-size: 12px;
+  color: var(--muted);
+}
+.example-result ul {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+}
+.example-result li {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 0;
+  font-size: 13px;
+}
+.example-result .icon {
+  width: 17px;
+  height: 17px;
+}
+.example-footnote {
+  border-top: 1px solid var(--line);
+  padding-top: 17px;
+  color: var(--forest);
+  font-size: 11px;
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+.faq-section {
+  display: grid;
+  grid-template-columns: 1fr 1.35fr;
+  gap: 65px;
+  border-top: 1px solid var(--line);
+  padding-top: 70px;
+}
+.faq-section h2 {
+  font-size: 29px;
+}
+.faq-list details {
+  border-bottom: 1px solid var(--line);
+  padding: 17px 0;
+}
+.faq-list summary {
+  min-height: 44px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 8px 0;
+}
+.faq-list p {
+  font-size: 13px;
+  line-height: 1.95;
+  color: var(--muted);
+  padding-right: 15px;
+  margin: 10px 0 20px;
+}
+.marketing-cta {
+  text-align: center;
+  padding: 62px 24px 75px;
+  background: #edf3e7;
+}
+.marketing-cta > img {
+  display: block;
+  margin: 0 auto 12px;
+  object-fit: contain;
+}
+.marketing-cta .marketing-eyebrow {
+  margin: 10px 0;
+}
+.marketing-cta h2 {
+  margin: 13px 0 28px;
+}
+.marketing-cta .primary-button {
+  min-height: 51px;
+  padding-inline: 25px;
+}
+.marketing-cta > p:last-child {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 23px;
+}
+.public-site .site-footer {
+  justify-content: flex-start;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+  border: 0;
+  padding: 30px;
+}
+.public-site .site-footer a:first-of-type {
+  margin-left: auto;
+}
+.public-site .content {
+  max-width: 1150px;
+}
+.public-site .auth-content {
+  max-width: 540px;
+}
+.public-site .public-feature-grid {
+  gap: 22px;
+}
+.public-site .public-feature {
+  background: var(--paper);
+}
+@media (max-width: 1100px) {
+  .marketing-header {
+    gap: 20px;
+    padding-inline: 25px;
+  }
+  .marketing-nav {
+    gap: 20px;
+  }
+  .marketing-account {
+    gap: 18px;
+  }
+  .marketing-hero {
+    gap: 30px;
+    padding-top: 65px;
+  }
+  .marketing-hero h1 {
+    font-size: 45px;
+  }
+  .hero-description {
+    font-size: 14px;
+  }
+  .hero-product {
+    padding: 16px 16px 0;
+  }
+  .marketing-benefits {
+    gap: 32px;
+    font-size: 12px;
+  }
+  .marketing-section {
+    padding: 70px 28px;
+  }
+  .calendar-story {
+    gap: 45px;
+  }
+  .ai-story {
+    gap: 45px;
+  }
+  .story-copy h2,
+  .marketing-section-heading h2 {
+    font-size: 30px;
+  }
+  .marketing-feature-grid,
+  .how-steps {
+    gap: 30px;
+  }
+}
+@media (max-width: 800px) {
+  .marketing-header {
+    flex-wrap: wrap;
+    padding: 14px 22px;
+    gap: 8px 20px;
+  }
+  .marketing-brand {
+    font-size: 20px;
+  }
+  .marketing-nav {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    gap: 35px;
+    border-top: 1px solid #e9eee5;
+    margin-top: 6px;
+    padding-top: 5px;
+  }
+  .marketing-nav a {
+    font-size: 13px;
+  }
+  .marketing-account {
+    margin-left: auto;
+  }
+  .marketing-account .primary-button {
+    min-height: 44px;
+    padding: 10px 13px;
+    font-size: 12px;
+  }
+  .marketing-login {
+    font-size: 12px;
+  }
+  .marketing-hero {
+    grid-template-columns: 1fr;
+    padding: 52px 28px 38px;
+    gap: 35px;
+  }
+  .marketing-hero h1 {
+    font-size: 52px;
+  }
+  .hero-text {
+    max-width: 600px;
+  }
+  .hero-description {
+    font-size: 15px;
+  }
+  .hero-product {
+    max-width: 700px;
+    padding: 22px 22px 0;
+  }
+  .marketing-benefits {
+    gap: 14px;
+    justify-content: space-between;
+    margin: 0 22px;
+    padding: 20px 0;
+    flex-wrap: wrap;
+  }
+  .marketing-benefits span {
+    gap: 7px;
+    font-size: 11px;
+  }
+  .marketing-feature-grid {
+    gap: 25px;
+  }
+  .marketing-feature h3 {
+    font-size: 16px;
+  }
+  .marketing-feature p {
+    font-size: 13px;
+  }
+  .calendar-story {
+    grid-template-columns: 1fr;
+    gap: 35px;
+  }
+  .calendar-product {
+    order: 2;
+    max-width: 700px;
+  }
+  .how-steps {
+    gap: 26px;
+  }
+  .how-steps h3 {
+    font-size: 17px;
+  }
+  .how-steps p {
+    font-size: 13px;
+  }
+  .ai-story {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .ai-example {
+    max-width: 650px;
+    width: 100%;
+  }
+  .faq-section {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+@media (max-width: 540px) {
+  .marketing-header {
+    padding: 12px 20px 5px;
+  }
+  .marketing-brand {
+    font-size: 19px;
+    gap: 8px;
+  }
+  .marketing-brand .brand-icon {
+    width: 32px;
+    height: 32px;
+  }
+  .marketing-account {
+    gap: 12px;
+  }
+  .marketing-login {
+    display: none;
+  }
+  .marketing-account .primary-button .icon {
+    display: none;
+  }
+  .marketing-nav {
+    justify-content: space-between;
+    gap: 14px;
+    padding: 5px 12px 0;
+    margin-top: 8px;
+  }
+  .marketing-hero {
+    padding: 42px 20px 30px;
+    gap: 29px;
+  }
+  .marketing-eyebrow {
+    font-size: 11px;
+    margin-bottom: 17px;
+  }
+  .marketing-hero h1 {
+    font-size: 41px;
+    letter-spacing: -1.8px;
+    margin: 18px 0 23px;
+    line-height: 1.35;
+  }
+  .hero-description {
+    font-size: 14px;
+    line-height: 1.9;
+  }
+  .hero-actions {
+    gap: 12px;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .hero-actions .primary-button {
+    font-size: 13px;
+    min-height: 48px;
+    padding: 12px 19px;
+  }
+  .hero-small {
+    font-size: 11px;
+    margin-top: 10px;
+  }
+  .hero-product {
+    padding: 12px 12px 0;
+    border-radius: 12px;
+  }
+  .product-caption {
+    font-size: 10px;
+    margin-bottom: 12px;
+    gap: 5px;
+  }
+  .product-caption .icon {
+    width: 16px;
+    height: 16px;
+  }
+  .product-caption > span:last-child {
+    font-size: 9px;
+  }
+  .hero-product figcaption {
+    font-size: 10px;
+    padding: 14px 0;
+  }
+  .marketing-benefits {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+    padding: 23px 0;
+  }
+  .marketing-benefits span {
+    font-size: 12px;
+  }
+  .marketing-section {
+    padding: 57px 20px;
+  }
+  .marketing-section-heading {
+    text-align: left;
+    margin-bottom: 30px;
+  }
+  .marketing-section-heading h2,
+  .story-copy h2,
+  .marketing-cta h2 {
+    font-size: 28px;
+    letter-spacing: -1px;
+  }
+  .marketing-section-heading > p:last-child {
+    font-size: 13px;
+  }
+  .marketing-feature-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .marketing-feature {
+    padding: 22px 0 10px;
+  }
+  .marketing-feature .feature-icon {
+    width: 26px;
+    height: 26px;
+    margin-bottom: 13px;
+  }
+  .marketing-feature h3 {
+    font-size: 18px;
+  }
+  .marketing-feature p {
+    margin-bottom: 0;
+    font-size: 14px;
+  }
+  .feature-catalog-link {
+    justify-content: flex-start;
+    margin-top: 22px;
+  }
+  .calendar-product {
+    padding: 13px;
+    border-radius: 12px;
+  }
+  .calendar-story {
+    gap: 24px;
+  }
+  .story-copy > p:not(.marketing-eyebrow):not(.ai-disclosure) {
+    font-size: 14px;
+  }
+  .how-steps {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+  .how-steps li {
+    padding-top: 21px;
+  }
+  .how-steps h3 {
+    font-size: 19px;
+    margin: 12px 0 8px;
+  }
+  .how-steps p {
+    font-size: 14px;
+    margin-bottom: 0;
+  }
+  .ai-example {
+    padding: 20px;
+  }
+  .example-label {
+    font-size: 12px;
+    gap: 7px;
+  }
+  .example-label > span {
+    font-size: 9px;
+  }
+  .example-result h3 {
+    font-size: 18px;
+  }
+  .example-result li {
+    font-size: 12px;
+  }
+  .ai-disclosure {
+    font-size: 11px;
+  }
+  .faq-section h2 {
+    font-size: 26px;
+  }
+  .faq-list summary {
+    font-size: 14px;
+  }
+  .marketing-cta {
+    padding: 42px 20px 55px;
+  }
+  .marketing-cta h2 {
+    margin-bottom: 24px;
+  }
+  .public-site .site-footer {
+    padding: 24px 20px;
+    gap: 12px;
+    font-size: 11px;
+  }
+  .public-site .site-footer > span {
+    width: 100%;
+  }
+  .public-site .site-footer a:first-of-type {
+    margin-left: 0;
+  }
+  .marketing-home section[id] {
+    scroll-margin-top: 15px;
+  }
+}
