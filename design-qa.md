@@ -49,4 +49,12 @@ The user's supplied existing dashboard screenshot anchored the retained visual t
 
 78 tests and 39 browser page/viewport checks passed; no axe violations, page overflow or browser errors. Owner isolation, legacy query redirects, selected navigation and create/delete return paths were tested. See `docs/design/WORKSPACE_SPLIT.md`. No remaining P0/P1/P2 issues.
 
+## Six productivity features
+
+Visually reviewed updated desktop/mobile assignment management, course overview and mobile backup captures. Retained the forest/ivory system, added archive tabs within management, kept course/backup workflows on dedicated pages and used existing checklist controls for daily focus. Row status forms have contextual accessible names. The AI result distinguishes measured pass/mismatch from manual review, and supports a real, non-generative recheck after edits.
+
+98 Python tests passed, 48 browser page/viewport checks passed with no axe findings, overflow, missing images or browser errors. Browser flows verified daily focus, completion, quick status, archive/reopen, course filtering, ZIP download and additive restore. AI analysis was mocked for UI result testing; the recheck endpoint was exercised normally, including edited requirements. Live Gemini quality is not claimed.
+
+`docs/design/assignments-*.png`, `courses-desktop.png`, `backup-mobile.png` and `ai-request-check-*.png` capture isolated sample data. No P0/P1/P2 issues remain.
+
 final result: passed

@@ -80,3 +80,7 @@ The public site now uses a horizontal navigation and a dedicated marketing layou
 ## Separate workspace pages
 
 The signed-in overview remains at `/`; search and the full list now live at `/assignments`. Tests and browser smoke scripts have been updated for the new destinations. Current validation: 78 Python tests, 39 viewport/page checks passed. See `WORKSPACE_SPLIT.md` for behavior, compatibility and screenshots. Earlier counts above record previous iterations.
+
+## Six productivity features
+
+Daily focus, quick status, completed archive, course summaries, AI measurable-request checks and account-scoped ZIP backup/restore are implemented. [Usage and limits](../PRODUCTIVITY_FEATURES.md). The current regression suite has 98 tests; browser smoke now covers 48 viewport/page combinations. `tests/ui_productivity.cjs` additionally exercises real ZIP download and additive restoration on the disposable fixture. Previous counts above are historical.

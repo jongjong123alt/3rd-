@@ -25,6 +25,9 @@ class DashboardFilterTests(unittest.TestCase):
                 ],
             )
 
+    def list_page(self, params):
+        return self.client.get("/assignments", query_string={"view":"all", **params})
+
     def tearDown(self):
         self.db_patch.stop()
         self.temp.cleanup()
@@ -37,7 +40,7 @@ class DashboardFilterTests(unittest.TestCase):
             ("자료구조", ("자료구조 보고서", "완료된 과제")),
         ):
             with self.subTest(query=query):
-                body = self.client.get("/assignments", query_string={"q": query}).get_data(as_text=True)
+                body = self.list_page({"q": query}).get_data(as_text=True)
                 for title in self.titles:
                     if title in expected:
                         self.assertIn(title, body)
@@ -54,7 +57,7 @@ class DashboardFilterTests(unittest.TestCase):
         )
         for params, expected in cases:
             with self.subTest(params=params):
-                body = self.client.get("/assignments", query_string=params).get_data(as_text=True)
+                body = self.list_page(params).get_data(as_text=True)
                 for title in self.titles:
                     if title in expected:
                         self.assertIn(title, body)
@@ -62,19 +65,19 @@ class DashboardFilterTests(unittest.TestCase):
                         self.assertNotIn(title, body)
 
     def test_combined_filters_counts(self):
-        body = self.client.get("/assignments", query_string={"q": "보고서", "status": "todo"}).get_data(as_text=True)
+        body = self.list_page({"q": "보고서", "status": "todo"}).get_data(as_text=True)
         self.assertIn("검색 결과 1개 / 전체 5개", body)
         self.assertIn("자료구조 보고서", body)
         self.assertNotIn("완료된 과제", body)
 
     def test_invalid_filters(self):
-        body = self.client.get("/assignments", query_string={"status": "bad", "deadline": "bad"}).get_data(as_text=True)
+        body = self.list_page({"status": "bad", "deadline": "bad"}).get_data(as_text=True)
         self.assertIn("자료구조 보고서", body)
         self.assertIn("기한 미정", body)
         self.assertNotIn("검색 결과", body)
 
     def test_empty_and_escaped_search(self):
-        body = self.client.get("/assignments", query_string={"q": "<script>alert(1)</script>"}).get_data(as_text=True)
+        body = self.list_page({"q": "<script>alert(1)</script>"}).get_data(as_text=True)
         self.assertIn("조건에 맞는 과제가 없어요", body)
         self.assertNotIn("<script>alert(1)</script>", body)
         self.assertIn("&lt;script&gt;", body)

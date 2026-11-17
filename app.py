@@ -15,6 +15,10 @@ from features.public import register_public
 from features.planning import register_planning, dashboard_planning, maybe_auto_replan
 from features.attachments import register_attachments, cleanup_assignment_files
 
+from features.backups import register_backups
+from features.productivity import register_productivity
+from services.requirement_checks import inspect_requirements
+
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "instance" / "assignments.db"
 STATUSES = {"todo": "시작 전", "doing": "진행 중", "done": "완료"}
@@ -135,7 +139,7 @@ def validate_form(form):
 def create_app(test_config=None):
     app = Flask(__name__)
     app.config.update(SECRET_KEY=os.environ.get("FLASK_SECRET_KEY") or secrets.token_hex(32),
-                      MAX_CONTENT_LENGTH=6 * 1024 * 1024,
+                      MAX_CONTENT_LENGTH=64 * 1024 * 1024,
                       SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax")
     if test_config:
         app.config.update(test_config)
@@ -144,6 +148,8 @@ def create_app(test_config=None):
     register_public(app)
     register_planning(app, connect_db, get_assignment, current_owner_id)
     register_attachments(app, connect_db, get_assignment, lambda: DB_PATH)
+    register_productivity(app, connect_db, get_assignment, current_owner_id, maybe_auto_replan)
+    register_backups(app, connect_db, current_owner_id, lambda: DB_PATH)
 
     @app.before_request
     def csrf_protect():
@@ -169,7 +175,7 @@ def create_app(test_config=None):
             return render_template("public_home.html")
         if session.get("user_id") is None and app.config.get("AUTH_REQUIRED", False):
             return render_template("public_home.html")
-        filter_keys = ("q", "status", "priority", "deadline", "sort")
+        filter_keys = ("q", "status", "priority", "deadline", "sort", "course", "view", "unassigned")
         if any(key in request.args for key in filter_keys):
             return redirect(url_for("assignment_list", **{key: request.args[key] for key in filter_keys if key in request.args}))
         return workspace_page(management=False)
@@ -236,7 +242,18 @@ def create_app(test_config=None):
             status_filter = "all"
         if deadline_filter not in ("all", "overdue", "week", "no_due"):
             deadline_filter = "all"
+        view = request.args.get("view", "completed" if status_filter == "done" else "active" if management else "all")
+        if view not in ("active", "completed", "all"):
+            view = "all"
+        course_filter = request.args.get("course", "").strip()[:100]
+        unassigned = request.args.get("unassigned") == "1" and not course_filter
         visible = assignments
+        if view == "active":
+            visible = [a for a in visible if a["status"] != "done"]
+        elif view == "completed":
+            visible = [a for a in visible if a["status"] == "done"]
+        if course_filter or unassigned:
+            visible = [a for a in visible if (a["course"] or "") == ("" if unassigned else course_filter)]
         if query:
             needle = query.casefold()
             visible = [a for a in visible if any(
@@ -278,6 +295,9 @@ def create_app(test_config=None):
         return render_template(
             "assignments.html" if management else "dashboard.html", assignments=visible, counts=counts,
             overview_assignments=[a for a in assignments if a["due_date"] and a["status"] != "done"][:4],
+            view=view, course_filter=course_filter, unassigned=unassigned,
+            course_options=sorted({a["course"] for a in assignments if a["course"]}),
+            done_total=status_counts["done"],
             checklist_progress=checklist_progress,
             ui_due_dates=[a["due_date"] for a in assignments if a["status"] != "done" and a["due_date"]],
             status_chart=status_chart, course_chart=course_chart, insights=insights,
@@ -285,7 +305,7 @@ def create_app(test_config=None):
             filters={"q": query, "status": status_filter, "deadline": deadline_filter,
                      "priority": priority_filter, "sort": sort_by},
             filtered_count=len(visible),
-            filters_active=bool(query or status_filter != "all" or deadline_filter != "all" or priority_filter != "all"),
+            filters_active=bool(query or status_filter != "all" or deadline_filter != "all" or priority_filter != "all" or course_filter or unassigned),
         )
 
     @app.get("/calendar")
@@ -457,7 +477,7 @@ def create_app(test_config=None):
             if cursor.rowcount == 0:
                 abort(404)
         maybe_auto_replan(connect_db, assignment_id, current_owner_id())
-        return redirect(url_for("assignment_detail", assignment_id=assignment_id))
+        return redirect(url_for("dashboard") if request.form.get("return_to") == "dashboard" else url_for("assignment_detail", assignment_id=assignment_id))
 
     @app.post("/assignments/<int:assignment_id>/checklist/<int:item_id>/edit")
     def edit_checklist_item(assignment_id, item_id):
@@ -587,7 +607,18 @@ def create_app(test_config=None):
                           if requirements else analyze_notice(notice))
             except GeminiAnalysisError as exc:
                 return render_template("ai_analyze.html", requirements=requirements, notice=notice, result=None, error=str(exc)), 502
-        return render_template("ai_analyze.html", requirements=requirements, notice=notice, result=result, error=None)
+        return render_template("ai_analyze.html", requirements=requirements, notice=notice, result=result, error=None, requirement_checks=inspect_requirements(requirements, result))
+
+    @app.post("/ai/check-requirements")
+    def check_requirements():
+        requirements = request.form.get("requirements", "")
+        summary = request.form.get("summary", "")
+        tasks = [x.strip() for x in request.form.get("tasks", "").splitlines() if x.strip()]
+        deliverables = [x.strip() for x in request.form.get("deliverables", "").splitlines() if x.strip()]
+        if (len(requirements) > 2000 or len(summary) > 2000 or len(tasks) > 30 or len(deliverables) > 30
+                or any(len(x) > 300 for x in tasks + deliverables)):
+            return jsonify(error="요약·요구사항은 2,000자, 항목은 각각 30개·300자 이내로 조정하세요."), 400
+        return jsonify(checks=inspect_requirements(requirements, {"summary":summary, "tasks":tasks, "deliverables":deliverables}))
 
     @app.post("/ai/save")
     def ai_save():
@@ -616,7 +647,8 @@ def create_app(test_config=None):
         if errors:
             draft = {**fields, "deliverables": deliverables, "tasks": tasks}
             return render_template("ai_analyze.html", notice="", result=draft,
-                                   error=None, save_errors=errors), 400
+                                   error=None, save_errors=errors, requirements=request.form.get("requirements", "")[:2000],
+                                   requirement_checks=inspect_requirements(request.form.get("requirements", "")[:2000], draft)), 400
 
         with connect_db() as connection:
             cursor = connection.execute(

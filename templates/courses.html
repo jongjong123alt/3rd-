@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}과목별 보기 · 과제 노트{% endblock %}
+{% block breadcrumb %}과목별 보기{% endblock %}
+{% block content %}
+<section class="content"><header class="workspace-heading"><div><p class="workspace-eyebrow">과목마다 한눈에</p><h1>과목별 보기</h1><p class="intro">과목을 선택하면 해당 과제만 모아볼 수 있어요.</p></div><a class="primary-button" href="{{ url_for('new_assignment') }}">새 과제</a></header>
+{% if courses %}<div class="course-grid">{% for course in courses %}<a class="course-summary" href="{{ url_for('assignment_list', course=course.course, unassigned='1' if not course.course else None, view='all') }}"><h2>{{ course.course or '과목 미지정' }}</h2><p>전체 {{ course.total }}개 · 진행할 과제 {{ course.total - course.done }}개</p><span>완료 {{ course.done }}개 / {{ course.total }}개</span><div class="insight-track" role="img" aria-label="완료 {{ course.done }}개 / {{ course.total }}개"><div class="insight-fill insight-done" style="width:{{ (course.done / course.total * 100)|round|int }}%"></div></div></a>{% endfor %}</div>{% else %}<div class="empty"><h2>아직 등록된 과목이 없어요.</h2><p>과제를 등록할 때 과목명을 입력해 주세요.</p></div>{% endif %}</section>
+{% endblock %}

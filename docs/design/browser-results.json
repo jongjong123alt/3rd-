@@ -2,5 +2,5 @@
   "failures": [],
   "errors": [],
   "flows": "CRUD, checklist completion, attachment upload, notes, search, AI missing-key error, logout, auth redirect, mobile navigation",
-  "captures": 39
+  "captures": 48
 }

@@ -2206,3 +2206,187 @@ h3 {
     font-size: 12px;
   }
 }
+.assignment-tabs {
+  display: flex;
+  gap: 25px;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.assignment-tabs a {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  min-height: 48px;
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 14px;
+}
+.assignment-tabs a[aria-current] {
+  color: var(--forest);
+  border-bottom: 2px solid var(--forest);
+  font-weight: 700;
+}
+.assignment-tabs span {
+  font-size: 11px;
+}
+.quick-status-form {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin: 0;
+}
+.quick-status-form select {
+  font: inherit;
+  font-size: 11px;
+  border: 1px solid #aebbaa;
+  border-radius: 6px;
+  padding: 8px 4px;
+  min-height: 44px;
+  max-width: 85px;
+  background: white;
+}
+.quick-status-form .secondary-button {
+  font-size: 11px;
+  padding: 8px;
+  min-height: 44px;
+}
+.manager-content .assignment-row,
+.manager-list-head {
+  grid-template-columns: minmax(0, 1fr) 105px 50px 140px 125px;
+  gap: 12px;
+}
+.manager-content a.assignment-title {
+  text-decoration: none;
+  color: var(--ink);
+}
+.manager-content a.assignment-title:hover {
+  text-decoration: underline;
+}
+.focus-task-button {
+  font-size: 11px;
+  padding: 8px 10px;
+}
+.focus-list li form {
+  margin: 0;
+}
+.focus-list .check-toggle {
+  margin-top: -8px;
+}
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+.course-summary {
+  padding: 24px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--forest);
+  min-width: 0;
+}
+.course-summary h2 {
+  font-size: 18px;
+  margin: 0 0 14px;
+  overflow-wrap: anywhere;
+}
+.course-summary p,
+.course-summary > span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.course-summary .insight-track {
+  margin-top: 14px;
+}
+.requirement-checks {
+  background: var(--paper);
+  padding: 20px;
+  border-radius: 9px;
+  margin: 15px 0 30px;
+}
+.requirement-checks h3 {
+  margin: 0 0 8px;
+}
+.requirement-checks ul {
+  list-style: none;
+  padding: 0;
+}
+.requirement-checks li {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border-top: 1px solid var(--line);
+  padding: 12px 0;
+}
+.requirement-checks li > span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.check-result-unmet strong {
+  color: #9b382b;
+}
+.check-result-passed strong {
+  color: var(--forest);
+}
+.backup-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-weight: 400 !important;
+}
+.assignment-form .backup-confirm input {
+  width: 20px;
+  min-height: 20px;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.backup-confirm + button {
+  align-self: flex-start;
+}
+@media (max-width: 1100px) {
+  .manager-content .assignment-row {
+    grid-template-columns: minmax(0, 1fr) 140px;
+    gap: 12px 20px;
+  }
+  .quick-status-form {
+    grid-column: 1;
+    grid-row: 3;
+  }
+  .manager-content .date-label {
+    grid-column: 2;
+    grid-row: 3;
+  }
+  .course-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 700px) {
+  .course-grid {
+    grid-template-columns: 1fr;
+  }
+  .assignment-tabs {
+    gap: 20px;
+  }
+  .assignment-tabs a {
+    font-size: 13px;
+  }
+  .quick-status-form select {
+    max-width: 82px;
+  }
+  .manager-content .assignment-row {
+    gap: 12px;
+  }
+  .checklist-row .focus-task-button {
+    font-size: 10px;
+  }
+}
+.today-work-more > summary {
+  cursor: pointer;
+  min-height: 44px;
+  font-size: 12px;
+  color: var(--forest);
+  padding: 12px 0;
+}

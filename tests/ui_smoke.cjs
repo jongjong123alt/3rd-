@@ -110,6 +110,9 @@ fs.mkdirSync("/tmp/campus-checks", { recursive: true });
     for (const [name, path] of [
       ["dashboard", "/"],
       ["manager", "/assignments"],
+      ["archive", "/assignments?view=completed"],
+      ["courses", "/courses"],
+      ["backup", "/backup"],
       ["calendar", "/calendar"],
       ["ai", "/ai/analyze"],
       ["new", "/assignments/new"],
@@ -134,6 +137,7 @@ fs.mkdirSync("/tmp/campus-checks", { recursive: true });
     .locator(".assignment-row")
     .filter({ hasText: "브라우저 검증 과제" })
     .first()
+    .locator(".assignment-title")
     .click();
   await p.waitForURL(/\/assignments\/\d+$/);
   const detailPath = new URL(p.url()).pathname;
@@ -207,7 +211,7 @@ fs.mkdirSync("/tmp/campus-checks", { recursive: true });
         errors,
         flows:
           "CRUD, checklist completion, attachment upload, notes, search, AI missing-key error, logout, auth redirect, mobile navigation",
-        captures: 39,
+        captures: 48,
       },
       null,
       2,
