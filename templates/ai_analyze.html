@@ -19,6 +19,18 @@
     <label for="ai-requirements">추가 요구사항 (선택)</label>
     <textarea id="ai-requirements" name="requirements" maxlength="2000" rows="4" aria-describedby="requirements-help" placeholder="예: 핵심 요약을 20줄로 작성해 줘. 제출 조건을 빠짐없이 정리해 줘.">{{ requirements|default('') }}</textarea>
     <p class="muted" id="requirements-help">공지 원문·첨부파일에 적용할 분석 요청입니다. 요약은 최대 2,000자이며, 원문 없이 요구사항만 입력하면 분석할 수 없습니다. 분석 오류 후 파일은 다시 첨부해 주세요.</p>
+    <details class="requirements-examples">
+      <summary>어떤 요구사항을 적을 수 있나요?</summary>
+      <ul class="muted">
+        <li>분량: “핵심만 5줄로”, “500자 이내로 자세히”</li>
+        <li>표현: “초보자도 이해하게”, “영어로 요약해 줘”</li>
+        <li>형식: “번호 목록으로”, “항목과 조건을 텍스트 표로”</li>
+        <li>중점: “제출 조건과 평가 기준 중심으로”, “필수와 선택을 구분해 줘”</li>
+        <li>작업: “할 일을 작은 단계로”, “제출 전 검토할 항목을 정리해 줘”</li>
+        <li>확인: “파일과 텍스트의 다른 조건을 알려줘”, “빠진 정보를 표시해 줘”</li>
+      </ul>
+      <p class="muted">원문에 없는 정보는 확인이 필요합니다. 요약은 2,000자, 제출물·할 일은 각각 30개 이내입니다. 웹 검색·실제 파일 생성·자동 제출은 이 분석 화면에서 지원하지 않습니다. 조건이 충돌하면 분량이나 요청을 조정해 주세요.</p>
+    </details>
     <div class="form-actions"><button class="primary-button" id="ai-submit-button" type="submit">공지문·파일 함께 AI 분석하기</button></div>
     <p class="muted" id="ai-loading-status" role="status" aria-live="polite" hidden>AI가 입력한 공지와 파일을 함께 분석하고 있습니다. 잠시 기다려 주세요.</p>
   </form>

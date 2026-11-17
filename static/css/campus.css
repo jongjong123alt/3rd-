@@ -1696,3 +1696,19 @@ h3 {
   font-size: 11px;
   color: inherit;
 }
+.requirements-examples {
+  margin-top: 10px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+}
+.requirements-examples summary {
+  cursor: pointer;
+  color: var(--forest);
+  font-size: 13px;
+  min-height: 44px;
+  padding: 10px 0;
+}
+.requirements-examples ul { padding-left: 20px; line-height: 1.9; }
+.requirements-examples p { line-height: 1.9; }
