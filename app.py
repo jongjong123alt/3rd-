@@ -530,18 +530,22 @@ def create_app(test_config=None):
     @app.route("/ai/analyze", methods=["GET", "POST"])
     @app.post("/ai/analyze-file")
     def ai_analyze():
+        requirements = request.form.get("requirements", "").strip()
         # F-19 combined mode: user notice + PDF/image are analyzed in ONE request.
         if request.method == "GET":
-            return render_template("ai_analyze.html", notice="", result=None, error=None)
+            return render_template("ai_analyze.html", requirements=requirements, notice="", result=None, error=None)
         notice = request.form.get("notice", "").strip()
         if len(notice) > 10000:
-            return render_template("ai_analyze.html", notice=notice[:10000], result=None,
+            return render_template("ai_analyze.html", requirements=requirements, notice=notice[:10000], result=None,
                                    error="공지문은 최대 10,000자까지 입력할 수 있습니다."), 400
+        if len(requirements) > 2000:
+            return render_template("ai_analyze.html", requirements=requirements[:2000], notice=notice,
+                                   result=None, error="추가 요구사항은 최대 2,000자까지 입력할 수 있습니다."), 400
         upload = request.files.get("document")
         has_file = upload is not None and bool(upload.filename)
         if not notice and not has_file:
-            return render_template("ai_analyze.html", notice="", result=None,
-                                   error="공지문을 입력하거나 PDF·이미지 파일을 첨부해 주세요."), 400
+            return render_template("ai_analyze.html", requirements=requirements, notice="", result=None,
+                                   error="분석할 공지 원문을 입력하거나 PDF·이미지 파일을 첨부해 주세요. 추가 요구사항만으로는 분석할 수 없습니다."), 400
 
         if has_file:
             filename = upload.filename.replace("\\", "/").rsplit("/", 1)[-1]
@@ -549,28 +553,30 @@ def create_app(test_config=None):
             supported = {".pdf": "application/pdf", ".png": "image/png",
                          ".jpg": "image/jpeg", ".jpeg": "image/jpeg"}
             if extension not in supported:
-                return render_template("ai_analyze.html", notice=notice, result=None,
+                return render_template("ai_analyze.html", requirements=requirements, notice=notice, result=None,
                                        error="PDF, PNG, JPG 파일만 분석할 수 있습니다."), 400
             data = upload.stream.read(5 * 1024 * 1024 + 1)
             if not data or len(data) > 5 * 1024 * 1024:
-                return render_template("ai_analyze.html", notice=notice, result=None,
+                return render_template("ai_analyze.html", requirements=requirements, notice=notice, result=None,
                                        error="파일은 5MB 이하이며 비어 있지 않아야 합니다."), 400
             valid = (data.startswith(b"%PDF-") if extension == ".pdf" else
                      data.startswith(b"\x89PNG\r\n\x1a\n") if extension == ".png" else
                      data.startswith(b"\xff\xd8\xff"))
             if not valid:
-                return render_template("ai_analyze.html", notice=notice, result=None,
+                return render_template("ai_analyze.html", requirements=requirements, notice=notice, result=None,
                                        error="파일 형식이 확장자와 일치하지 않습니다."), 400
             try:
-                result = analyze_document(data, supported[extension], notice)
+                result = (analyze_document(data, supported[extension], notice, requirements=requirements)
+                          if requirements else analyze_document(data, supported[extension], notice))
             except GeminiAnalysisError as exc:
-                return render_template("ai_analyze.html", notice=notice, result=None, error=str(exc)), 502
+                return render_template("ai_analyze.html", requirements=requirements, notice=notice, result=None, error=str(exc)), 502
         else:
             try:
-                result = analyze_notice(notice)
+                result = (analyze_notice(notice, requirements=requirements)
+                          if requirements else analyze_notice(notice))
             except GeminiAnalysisError as exc:
-                return render_template("ai_analyze.html", notice=notice, result=None, error=str(exc)), 502
-        return render_template("ai_analyze.html", notice=notice, result=result, error=None)
+                return render_template("ai_analyze.html", requirements=requirements, notice=notice, result=None, error=str(exc)), 502
+        return render_template("ai_analyze.html", requirements=requirements, notice=notice, result=result, error=None)
 
     @app.post("/ai/save")
     def ai_save():

@@ -10,12 +10,15 @@
   <div class="note ai-key-note"><strong>분석 전 확인</strong><p>실제 분석에는 Gemini API 키 설정이 필요합니다. 분석 결과는 원문과 대조한 뒤 저장해 주세요.</p></div>
   <form class="assignment-form" id="ai-analysis-form" method="post" enctype="multipart/form-data" action="{{ url_for('ai_analyze') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <label for="notice">과제 공지 내용·추가 요구사항 (선택)</label>
-    <textarea id="notice" name="notice" rows="9" maxlength="10000" placeholder="교수님이 안내한 과제 조건이나 이미지/PDF에 없는 추가 요구사항을 입력하세요. 예: A4 3쪽 이내, PDF 제출, 참고문헌 포함">{{ notice }}</textarea>
-    <p class="muted">공지문 원문과 직접 전달받은 요구사항을 함께 입력할 수 있습니다. 파일과 내용이 다르면 분석 결과에서 확인해 주세요.</p>
+    <label for="notice">과제 공지 원문 (텍스트 또는 파일 필수)</label>
+    <textarea id="notice" name="notice" rows="9" maxlength="10000" placeholder="분석할 실제 공지문을 붙여넣으세요. 파일을 첨부한다면 비워 두어도 됩니다.">{{ notice }}</textarea>
+    <p class="muted">분석할 자료를 입력하는 곳입니다. 요약 줄 수나 정리 방식은 아래 추가 요구사항에 적어 주세요.</p>
     <label for="ai-document">과제 공지 PDF·이미지 (선택)</label>
     <input id="ai-document" type="file" name="document" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg">
     <p class="muted">PDF·PNG·JPG, 최대 5MB. 텍스트 또는 파일 중 하나는 필수입니다. 입력 내용과 파일은 Gemini API로 전송되며, 분석용 원본 파일은 이 앱에 저장하지 않습니다. 개인정보나 API 키를 포함하지 마세요.</p>
+    <label for="ai-requirements">추가 요구사항 (선택)</label>
+    <textarea id="ai-requirements" name="requirements" maxlength="2000" rows="4" aria-describedby="requirements-help" placeholder="예: 핵심 요약을 20줄로 작성해 줘. 제출 조건을 빠짐없이 정리해 줘.">{{ requirements|default('') }}</textarea>
+    <p class="muted" id="requirements-help">공지 원문·첨부파일에 적용할 분석 요청입니다. 요약은 최대 2,000자이며, 원문 없이 요구사항만 입력하면 분석할 수 없습니다. 분석 오류 후 파일은 다시 첨부해 주세요.</p>
     <div class="form-actions"><button class="primary-button" id="ai-submit-button" type="submit">공지문·파일 함께 AI 분석하기</button></div>
     <p class="muted" id="ai-loading-status" role="status" aria-live="polite" hidden>AI가 입력한 공지와 파일을 함께 분석하고 있습니다. 잠시 기다려 주세요.</p>
   </form>
