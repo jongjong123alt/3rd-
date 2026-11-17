@@ -76,3 +76,7 @@ The public site now uses a horizontal navigation and a dedicated marketing layou
 ## Feature page follow-up
 
 `/features` now presents four usage scenes instead of the 21 internal feature cards. The homepage link now reads “과제 노트 사용 장면 살펴보기”. Existing tests were updated to verify public tour sections and privacy without depending on the retired F-number labels. See `FEATURE_TOUR.md` for source review, changes and screenshots.
+
+## Separate workspace pages
+
+The signed-in overview remains at `/`; search and the full list now live at `/assignments`. Tests and browser smoke scripts have been updated for the new destinations. Current validation: 78 Python tests, 39 viewport/page checks passed. See `WORKSPACE_SPLIT.md` for behavior, compatibility and screenshots. Earlier counts above record previous iterations.

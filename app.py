@@ -169,6 +169,16 @@ def create_app(test_config=None):
             return render_template("public_home.html")
         if session.get("user_id") is None and app.config.get("AUTH_REQUIRED", False):
             return render_template("public_home.html")
+        filter_keys = ("q", "status", "priority", "deadline", "sort")
+        if any(key in request.args for key in filter_keys):
+            return redirect(url_for("assignment_list", **{key: request.args[key] for key in filter_keys if key in request.args}))
+        return workspace_page(management=False)
+
+    @app.get("/assignments")
+    def assignment_list():
+        return workspace_page(management=True)
+
+    def workspace_page(management):
         with connect_db() as connection:
             assignments = connection.execute(
                 "SELECT * FROM assignments WHERE owner_id IS ? ORDER BY CASE WHEN due_date IS NULL OR due_date = '' THEN 1 ELSE 0 END, due_date ASC, id DESC",
@@ -266,7 +276,8 @@ def create_app(test_config=None):
             ][:5],
         }
         return render_template(
-            "dashboard.html", assignments=visible, counts=counts,
+            "assignments.html" if management else "dashboard.html", assignments=visible, counts=counts,
+            overview_assignments=[a for a in assignments if a["due_date"] and a["status"] != "done"][:4],
             checklist_progress=checklist_progress,
             ui_due_dates=[a["due_date"] for a in assignments if a["status"] != "done" and a["due_date"]],
             status_chart=status_chart, course_chart=course_chart, insights=insights,
@@ -356,7 +367,7 @@ def create_app(test_config=None):
                         (values["title"], values["course"], values["description"], values["due_date"] or None, values["status"], values["priority"], current_owner_id()),
                     )
                 flash("과제가 등록되었습니다.", "success")
-                return redirect(url_for("dashboard"))
+                return redirect(url_for("assignment_list"))
             return render_template("assignment_form.html", values=values, errors=errors, editing=False), 400
         return render_template("assignment_form.html", values={}, errors=[], editing=False)
 
@@ -417,7 +428,7 @@ def create_app(test_config=None):
         with connect_db() as connection:
             connection.execute("DELETE FROM assignments WHERE id=? AND owner_id IS ?", (assignment_id, current_owner_id()))
         flash("과제가 삭제되었습니다.", "success")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("assignment_list"))
 
     @app.post("/assignments/<int:assignment_id>/checklist")
     def add_checklist_item(assignment_id):

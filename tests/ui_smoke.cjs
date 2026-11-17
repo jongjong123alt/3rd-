@@ -109,12 +109,13 @@ fs.mkdirSync("/tmp/campus-checks", { recursive: true });
   for (const width of [1440, 390, 320])
     for (const [name, path] of [
       ["dashboard", "/"],
+      ["manager", "/assignments"],
       ["calendar", "/calendar"],
       ["ai", "/ai/analyze"],
       ["new", "/assignments/new"],
       ["detail", "/assignments/1"],
       ["schedule", "/schedule"],
-      ["empty-search", "/?q=unmatched-campus-fixture"],
+      ["empty-search", "/assignments?q=unmatched-campus-fixture"],
     ])
       await inspect(name, path, width);
   fs.writeFileSync(
@@ -128,7 +129,7 @@ fs.mkdirSync("/tmp/campus-checks", { recursive: true });
   await p.locator("#due_date").fill("2026-11-20");
   await p.locator("#description").fill("실제 폼으로 등록한 테스트 데이터");
   await p.getByRole("button", { name: "과제 등록", exact: true }).click();
-  await p.waitForURL(base + "/");
+  await p.waitForURL(base + "/assignments");
   await p
     .locator(".assignment-row")
     .filter({ hasText: "브라우저 검증 과제" })
@@ -170,8 +171,7 @@ fs.mkdirSync("/tmp/campus-checks", { recursive: true });
   await p.getByRole("button", { name: "수정 저장" }).click();
   await p.waitForLoadState();
   assert.match(await p.locator("h1").innerText(), /수정된 브라우저 과제/);
-  await p.goto(base + "/");
-  await p.locator(".filter-disclosure summary").click();
+  await p.goto(base + "/assignments");
   await p.locator("#dashboard-query").fill("수정된 브라우저");
   await p.getByRole("button", { name: "검색", exact: true }).click();
   await p.waitForLoadState();
@@ -187,7 +187,7 @@ fs.mkdirSync("/tmp/campus-checks", { recursive: true });
   await p.goto(base + detailPath);
   p.once("dialog", (d) => d.accept());
   await p.locator('form[action="' + detailPath + '/delete"] button').click();
-  await p.waitForURL(base + "/");
+  await p.waitForURL(base + "/assignments");
   assert.equal(
     await p
       .locator(".assignment-row")
@@ -207,7 +207,7 @@ fs.mkdirSync("/tmp/campus-checks", { recursive: true });
         errors,
         flows:
           "CRUD, checklist completion, attachment upload, notes, search, AI missing-key error, logout, auth redirect, mobile navigation",
-        captures: 36,
+        captures: 39,
       },
       null,
       2,

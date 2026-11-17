@@ -43,4 +43,10 @@ Visually reviewed the corrected desktop and mobile captures at `docs/design/feat
 
 Research findings and evidence limits: `docs/design/FEATURE_TOUR.md`.
 
+## Separate overview and management update
+
+The user's supplied existing dashboard screenshot anchored the retained visual theme. The requested information separation is implemented as a focused overview and a dedicated assignment list. Visually inspected desktop overview/management and mobile management captures; confirmed consistent headings, one primary action, aligned rows, no duplicate dashboard widgets on the list and bounded overview content. Current captures are stored in `docs/design/dashboard-*.png` and `docs/design/assignments-*.png`.
+
+78 tests and 39 browser page/viewport checks passed; no axe violations, page overflow or browser errors. Owner isolation, legacy query redirects, selected navigation and create/delete return paths were tested. See `docs/design/WORKSPACE_SPLIT.md`. No remaining P0/P1/P2 issues.
+
 final result: passed

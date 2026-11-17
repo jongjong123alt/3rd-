@@ -1710,5 +1710,499 @@ h3 {
   min-height: 44px;
   padding: 10px 0;
 }
-.requirements-examples ul { padding-left: 20px; line-height: 1.9; }
-.requirements-examples p { line-height: 1.9; }
+.requirements-examples ul {
+  padding-left: 20px;
+  line-height: 1.9;
+}
+.requirements-examples p {
+  line-height: 1.9;
+}
+/* Separate overview and assignment management workspaces. */
+.workspace-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+.workspace-heading h1 {
+  font-size: 32px;
+  margin: 8px 0 10px;
+}
+.workspace-heading > .primary-button,
+.workspace-heading > .secondary-button {
+  flex-shrink: 0;
+  margin-top: 8px;
+}
+.workspace-heading .intro {
+  margin-bottom: 0;
+  font-size: 14px;
+}
+.workspace-eyebrow {
+  font-size: 12px;
+  color: var(--forest);
+  margin: 0;
+  font-weight: 600;
+}
+.overview-content,
+.manager-content {
+  max-width: 1280px;
+  padding-top: 42px;
+}
+.overview-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-block: 1px solid var(--line);
+  padding: 23px 0;
+  margin-bottom: 30px;
+}
+.overview-stats > a {
+  padding: 0 30px;
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--ink);
+}
+.overview-stats > a:first-child {
+  padding-left: 0;
+}
+.overview-stats > a:last-child {
+  border: 0;
+}
+.overview-stats > a:hover > span {
+  text-decoration: underline;
+}
+.overview-stats span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.overview-stats strong {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--forest);
+}
+.overview-stats small {
+  font-size: 13px;
+  font-weight: 400;
+  margin-left: 6px;
+}
+.overview-stats .needs-attention {
+  color: #9c3e2c;
+}
+.overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 35px;
+}
+.overview-section {
+  min-width: 0;
+}
+.overview-section + .overview-section {
+  border-left: 1px solid var(--line);
+  padding-left: 30px;
+}
+.overview-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  min-height: 44px;
+  margin-bottom: 12px;
+}
+.overview-section-head h2 {
+  font-size: 20px;
+  margin: 0;
+}
+.overview-section-head .text-link {
+  font-size: 12px;
+}
+.overview-empty {
+  background: var(--paper);
+  padding: 28px 24px;
+  border-radius: 10px;
+  min-height: 220px;
+}
+.overview-empty > .icon {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 4px;
+}
+.overview-empty h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 12px 0 8px;
+}
+.overview-empty p {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+.focus-list,
+.deadline-focus-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.focus-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 17px 0;
+  border-bottom: 1px solid var(--line);
+}
+.focus-list li > .icon {
+  margin-top: 3px;
+}
+.focus-list a {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-decoration: none;
+  min-width: 0;
+}
+.focus-list strong,
+.focus-assignment strong {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.focus-list a > span,
+.focus-assignment small {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.focus-list a:hover strong,
+.deadline-focus-list a:hover strong {
+  text-decoration: underline;
+}
+.deadline-focus-list li {
+  border-bottom: 1px solid var(--line);
+}
+.deadline-focus-list a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  text-decoration: none;
+}
+.focus-assignment {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.deadline-focus-list .deadline-badge {
+  flex-shrink: 0;
+}
+.overview-progress {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+  padding: 25px 28px;
+  background: var(--paper);
+  border-radius: 10px;
+  margin: 34px 0 20px;
+}
+.overview-progress h2 {
+  font-size: 15px;
+  margin: 0 0 7px;
+}
+.overview-progress p {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+}
+.overview-progress-bar {
+  width: 42%;
+  min-width: 100px;
+}
+.overview-progress-bar > strong {
+  display: block;
+  color: var(--forest);
+  font-size: 18px;
+  text-align: right;
+  margin-bottom: 9px;
+}
+.overview-disclosures {
+  margin-top: 24px;
+}
+.overview-disclosures > details {
+  border-bottom: 1px solid var(--line);
+}
+.overview-disclosures > details > summary {
+  cursor: pointer;
+  color: var(--muted);
+  min-height: 48px;
+  padding: 14px 0;
+  font-size: 13px;
+}
+.overview-disclosures .dashboard-insights {
+  border: 0;
+  margin-top: 0;
+  padding: 0 0 20px;
+}
+.overview-disclosures .insight-checklist {
+  display: none;
+}
+.manager-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  border-top: 1px solid var(--line);
+  padding-top: 19px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.manager-toolbar strong {
+  color: var(--forest);
+}
+.manager-toolbar .text-link {
+  font-size: 12px;
+}
+.manager-content .filter-disclosure {
+  margin: 5px 0 24px;
+  background: var(--paper);
+  padding: 8px 20px 15px;
+  border-radius: 10px;
+}
+.manager-content .filter-disclosure > summary {
+  font-size: 12px;
+  min-height: 40px;
+}
+.manager-content .dashboard-filters {
+  margin: 0;
+  padding: 10px 0 0;
+  gap: 14px;
+}
+.manager-content .dashboard-filter-field {
+  min-width: 110px;
+}
+.manager-content .dashboard-search-field {
+  flex-basis: 100%;
+}
+.manager-content .dashboard-filter-field input,
+.manager-content .dashboard-filter-field select {
+  font-size: 13px;
+}
+.manager-content .assignment-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px 56px 76px 150px;
+  gap: 16px;
+  padding: 21px 8px;
+  align-items: center;
+}
+.manager-content .assignment-title {
+  font-size: 14px;
+  line-height: 1.7;
+}
+.manager-content .assignment-title small {
+  margin-top: 5px;
+  display: block;
+  font-size: 12px;
+}
+.manager-content .row-progress {
+  min-width: 0;
+  font-size: 11px;
+}
+.manager-content .date-label {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  font-size: 12px;
+}
+.manager-content .date-label .deadline-badge {
+  margin: 0;
+}
+.manager-content .status,
+.manager-content .priority-tag {
+  justify-self: start;
+  font-size: 11px;
+  padding: 4px 8px;
+}
+.manager-list-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px 56px 76px 150px;
+  gap: 16px;
+  padding: 12px 8px;
+  font-size: 11px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+.manager-list-head > span:last-child {
+  text-align: right;
+}
+.manager-content .assignment-list {
+  border-top: 0;
+}
+.manager-content .empty {
+  margin-top: 24px;
+}
+.manager-content .dashboard-filter-count {
+  margin-bottom: 14px;
+}
+@media (max-width: 1100px) {
+  .manager-content .assignment-row {
+    grid-template-columns: minmax(0, 1fr) 120px;
+    gap: 12px 20px;
+    padding: 20px 4px;
+  }
+  .manager-content .assignment-title {
+    grid-column: 1/-1;
+    font-size: 15px;
+  }
+  .manager-content .row-progress {
+    max-width: 180px;
+  }
+  .manager-content .priority-tag {
+    justify-self: end;
+  }
+  .manager-content .date-label {
+    grid-column: 2;
+    grid-row: 3;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    font-size: 11px;
+  }
+  .manager-content .status {
+    grid-column: 1;
+    grid-row: 3;
+  }
+  .manager-list-head {
+    display: none;
+  }
+  .overview-grid {
+    gap: 25px;
+  }
+  .overview-section + .overview-section {
+    padding-left: 24px;
+  }
+  .workspace-heading h1 {
+    font-size: 29px;
+  }
+}
+@media (max-width: 700px) {
+  .overview-content,
+  .manager-content {
+    padding-top: 28px;
+  }
+  .workspace-heading {
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 25px;
+  }
+  .workspace-heading h1 {
+    font-size: 27px;
+  }
+  .workspace-heading > .primary-button,
+  .workspace-heading > .secondary-button {
+    margin: 0;
+  }
+  .workspace-heading .intro {
+    font-size: 13px;
+  }
+  .workspace-eyebrow {
+    font-size: 11px;
+  }
+  .overview-stats {
+    padding: 20px 0;
+    margin-bottom: 24px;
+  }
+  .overview-stats > a {
+    padding: 0 12px;
+    gap: 10px;
+  }
+  .overview-stats span {
+    font-size: 11px;
+  }
+  .overview-stats strong {
+    font-size: 24px;
+  }
+  .overview-stats small {
+    font-size: 11px;
+    margin-left: 4px;
+  }
+  .overview-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .overview-section + .overview-section {
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+  }
+  .overview-section-head h2 {
+    font-size: 19px;
+  }
+  .overview-empty {
+    min-height: 0;
+    padding: 23px 20px;
+  }
+  .overview-progress {
+    padding: 20px;
+    gap: 18px;
+    align-items: flex-start;
+  }
+  .overview-progress h2 {
+    font-size: 13px;
+  }
+  .overview-progress-bar {
+    width: 35%;
+  }
+  .manager-toolbar {
+    gap: 10px;
+  }
+  .manager-toolbar .text-link {
+    font-size: 11px;
+  }
+  .manager-toolbar .icon {
+    width: 17px;
+    height: 17px;
+  }
+  .manager-content .filter-disclosure {
+    padding: 8px 14px 15px;
+  }
+  .manager-content .dashboard-filters {
+    gap: 12px;
+  }
+  .manager-content .dashboard-filter-field {
+    flex-basis: 40%;
+    min-width: 100px;
+  }
+  .manager-content .dashboard-search-field {
+    flex-basis: 100%;
+  }
+  .manager-content .assignment-row {
+    gap: 11px 15px;
+    grid-template-columns: minmax(0, 1fr) 140px;
+  }
+  .manager-content .assignment-title small {
+    display: block;
+    margin: 4px 0 0;
+  }
+  .manager-content .row-progress {
+    max-width: 145px;
+  }
+  .manager-content .date-label {
+    font-size: 10px;
+    gap: 5px;
+  }
+  .manager-content .date-label .deadline-badge {
+    font-size: 10px;
+  }
+  .overview-disclosures > details > summary {
+    font-size: 12px;
+  }
+}

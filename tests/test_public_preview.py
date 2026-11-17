@@ -67,7 +67,7 @@ class PublicPreviewTests(unittest.TestCase):
                 self.assertNotIn(private_title, response.get_data(as_text=True))
 
     def test_guest_private_get_redirects_to_login(self):
-        for path in ("/assignments/new", "/assignments/1", "/calendar",
+        for path in ("/assignments", "/assignments/new", "/assignments/1", "/calendar",
                      "/schedule", "/ai/analyze"):
             with self.subTest(path=path):
                 response = self.client.get(path)

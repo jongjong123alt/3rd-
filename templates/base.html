@@ -20,10 +20,10 @@
       <div class="sidebar-label">{{ '나의 캠퍼스' if signed_in else '서비스 미리보기' }}</div>
       <nav aria-label="{{ '워크스페이스' if signed_in else '서비스' }}">
       {% if signed_in %}
-        {% for endpoint, label, image in [('dashboard','대시보드','house-door'),('ai_analyze','AI 공지 분석','stars'),('calendar_view','마감 달력','calendar3'),('schedule_view','일정 충돌','exclamation-triangle')] %}
-        <a class="nav {{ 'active' if request.endpoint == endpoint else '' }}" href="{{ url_for(endpoint) }}" {% if request.endpoint == endpoint %}aria-current="page"{% endif %}>{{ icon(image) }}<span>{{ label }}</span></a>
+        {% for endpoint, label, image in [('dashboard','대시보드','house-door'),('assignment_list','과제 관리','grid'),('ai_analyze','AI 공지 분석','stars'),('calendar_view','마감 달력','calendar3'),('schedule_view','일정 충돌','exclamation-triangle')] %}
+        {% set nav_active = request.endpoint == endpoint or (endpoint == 'assignment_list' and request.endpoint in ('new_assignment','assignment_detail','edit_assignment')) %}
+        <a class="nav {{ 'active' if nav_active else '' }}" href="{{ url_for(endpoint) }}" {% if nav_active %}aria-current="page"{% endif %}>{{ icon(image) }}<span>{{ label }}</span></a>
         {% endfor %}
-        <a class="nav" href="{{ url_for('dashboard') }}#assignments">{{ icon('grid') }}<span>과제 관리</span></a>
       {% endif %}
       </nav>
       <div class="sidebar-bottom">

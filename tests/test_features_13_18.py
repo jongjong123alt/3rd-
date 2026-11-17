@@ -147,7 +147,7 @@ class AuthIsolationTests(unittest.TestCase):
         self.assertEqual(self.post("/auth/register", username="first_user",
                                    password="long-password-123").status_code, 302)
         self.update_token()
-        first = self.client.get("/").get_data(as_text=True)
+        first = self.client.get("/assignments").get_data(as_text=True)
         self.assertIn("이전 과제", first)
         self.assertEqual(self.post("/assignments/new", title="첫 사용자 과제").status_code, 302)
         with project.connect_db() as db:
@@ -170,7 +170,7 @@ class AuthIsolationTests(unittest.TestCase):
                                    password="wrong-password").status_code, 401)
         self.assertEqual(self.post("/auth/login", username="first_user",
                                    password="long-password-123").status_code, 302)
-        self.assertIn("이전 과제", self.client.get("/").get_data(as_text=True))
+        self.assertIn("이전 과제", self.client.get("/assignments").get_data(as_text=True))
 
     def test_f18_csrf_and_remote_first_user_registration(self):
         self.assertEqual(self.client.post("/auth/register", data={

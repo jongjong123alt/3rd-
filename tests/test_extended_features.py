@@ -51,10 +51,10 @@ class ExtendedFeatureTests(unittest.TestCase):
         self.create("보통 과제")
         with project.connect_db() as db:
             self.assertEqual(db.execute("SELECT priority FROM assignments WHERE id=?", (high,)).fetchone()[0], "high")
-        body = self.client.get("/", query_string={"sort": "priority"}).get_data(as_text=True)
+        body = self.client.get("/assignments", query_string={"sort": "priority"}).get_data(as_text=True)
         self.assertLess(body.index("높은 과제"), body.index("보통 과제"))
         self.assertLess(body.index("보통 과제"), body.index("낮은 과제"))
-        body = self.client.get("/", query_string={"priority": "high"}).get_data(as_text=True)
+        body = self.client.get("/assignments", query_string={"priority": "high"}).get_data(as_text=True)
         self.assertIn("높은 과제", body)
         self.assertNotIn("낮은 과제", body)
         response = self.post(f"/assignments/{high}/edit", title="높은 과제",
@@ -104,8 +104,9 @@ class ExtendedFeatureTests(unittest.TestCase):
         with project.connect_db() as db:
             item = db.execute("SELECT id FROM checklist_items ORDER BY id LIMIT 1").fetchone()[0]
         self.post(f"/assignments/{a}/checklist/{item}/toggle")
-        body = self.client.get("/", query_string={"priority": "high"}).get_data(as_text=True)
+        body = self.client.get("/assignments", query_string={"priority": "high"}).get_data(as_text=True)
         self.assertIn("검색 결과 1개 / 전체 2개", body)
+        body = self.client.get("/").get_data(as_text=True)
         self.assertIn("체크리스트 진행률", body)
         self.assertIn("1 / 2 완료", body)
         self.assertIn("50%", body)

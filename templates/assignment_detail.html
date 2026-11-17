@@ -3,7 +3,7 @@
 {% block breadcrumb %}과제 상세{% endblock %}
 {% block content %}
 <section class="content">
-  <a class="back-link" href="{{ url_for('dashboard') }}">← 대시보드</a>
+  <a class="back-link" href="{{ url_for('assignment_list') }}">← 과제 관리</a>
   <div class="detail-heading"><h1>{{ assignment.title }}</h1><span class="status status-{{ assignment.status }}">{{ statuses[assignment.status] }}</span></div>
   <dl class="details">
     <div><dt>과목</dt><dd>{{ assignment.course or '미지정' }}</dd></div>
