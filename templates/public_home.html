@@ -2,21 +2,29 @@
 {% block title %}과제 노트 · AI 과제 분석 및 일정 관리{% endblock %}
 {% block breadcrumb %}서비스 소개{% endblock %}
 {% block content %}
-<section class="content public-content">
-  <div class="public-eyebrow">AI 기반 과제 분석 및 일정 관리</div>
-  <h1>과제 공지부터 마감 일정까지,<br>한곳에서 관리하세요.</h1>
-  <p class="intro">로그인 없이 주요 기능을 둘러볼 수 있습니다. 실제 과제 등록, 개인 데이터 조회, AI 분석은 로그인 후 이용할 수 있어요.</p>
-  <div class="public-actions">
-    <a class="primary-button" href="{{ url_for('login') }}">로그인하고 시작하기</a>
-    <a class="secondary-button" href="{{ url_for('register') }}">회원가입</a>
-    <a class="secondary-button" href="{{ url_for('public_features') }}">전체 기능 보기 (21개)</a>
+<section class="content public-content landing-content">
+  <div class="landing-hero">
+    <div class="hero-copy"><p class="public-eyebrow">나의 속도로 채우는 한 학기</p>
+      <h1>과제는 차근차근,<br>대학 생활은 <em>가볍게.</em></h1>
+      <p class="intro">흩어진 과제 공지를 정리하고, 마감 전에 하나씩.<br>해야 할 일과 일정을 과제 노트에 모아보세요.</p>
+      <div class="public-actions"><a class="primary-button" href="{{ url_for('login') }}">로그인하고 시작하기 {{ icon('arrow-right') }}</a><a class="text-link" href="{{ url_for('feature_preview', slug='ai') }}">AI 분석 시연 보기</a></div>
+      <p class="hero-caption">로그인 전에는 예시 화면만 표시됩니다.<br>개인 과제와 AI 분석은 로그인 후 이용할 수 있어요.</p>
+    </div>
+    <div class="landing-sample" aria-label="과제 관리 화면 예시">
+      <div class="sample-head"><span>{{ icon('journal-text') }} 나의 과제 노트</span><span class="sample-badge">예시 화면</span></div>
+      <h2>오늘도, 하나씩 차근차근.</h2><p class="muted">마감 전에 작은 할 일부터 시작해요.</p>
+      <div class="sample-task"><div><span class="course-chip">자료구조</span><h3>트리 구현 및 분석</h3><p>체크리스트 3 / 5 완료</p></div><span class="status status-doing">진행 중</span></div>
+      <div class="sample-task"><div><span class="course-chip">운영체제</span><h3>프로세스 비교 보고서</h3><p>체크리스트 0 / 3 완료</p></div><span class="status status-todo">시작 전</span></div>
+      <div class="sample-note">{{ icon('check-square') }} 자료 조사 완료. 한 걸음 나아갔어요.</div>
+      <img class="hero-sprout" src="{{ url_for('static', filename='images/sprout.png') }}" alt="" width="94" height="94">
+    </div>
   </div>
-  <div class="public-grid">
-    <a class="public-card" href="{{ url_for('feature_preview', slug='dashboard') }}"><span class="public-card-icon">▤</span><strong>과제 대시보드</strong><span>마감일·진행 상태·우선순위를 한눈에</span><small>화면 미리보기 →</small></a>
-    <a class="public-card" href="{{ url_for('feature_preview', slug='ai') }}"><span class="public-card-icon">✧</span><strong>Gemini AI 분석</strong><span>공지문·PDF·이미지를 분석하고 일정 제안</span><small>화면 미리보기 →</small></a>
-    <a class="public-card" href="{{ url_for('feature_preview', slug='calendar') }}"><span class="public-card-icon">▦</span><strong>마감 달력</strong><span>월별 제출기한과 과제 일정 정리</span><small>화면 미리보기 →</small></a>
-    <a class="public-card" href="{{ url_for('feature_preview', slug='schedule') }}"><span class="public-card-icon">⚑</span><strong>일정 충돌 확인</strong><span>마감일이 겹치는 과제를 미리 확인</span><small>화면 미리보기 →</small></a>
+  <div class="section-head"><div><p class="public-eyebrow">공지를 읽는 순간부터, 제출하는 날까지</p><h2>한곳에서 이어지는 과제 관리</h2></div><a class="text-link" href="{{ url_for('public_features') }}">전체 기능 보기 (21개) {{ icon('arrow-right') }}</a></div>
+  <div class="public-grid landing-features">
+    {% for slug, image, title, description in [('dashboard','journal-text','내 과제를 한눈에','진행 상태와 우선순위를 확인하고, 체크리스트로 하나씩 완료해요.'),('ai','stars','공지문을 과제로','텍스트·PDF·이미지를 함께 분석하고, 결과를 검토한 뒤 저장해요.'),('calendar','calendar3','마감을 놓치지 않게','월별 달력에서 제출기한을 보고, 겹치는 마감도 미리 확인해요.')] %}
+    <a class="public-card" href="{{ url_for('feature_preview', slug=slug) }}">{{ icon(image, 'feature-icon') }}<strong>{{ title }}</strong><span>{{ description }}</span><small>예시 화면 보기 {{ icon('arrow-right') }}</small></a>
+    {% endfor %}
   </div>
-  <div class="public-notice"><strong>안내</strong> 아래 미리보기는 예시 데이터로 구성되어 있습니다. 다른 사용자의 과제나 실제 개인 정보는 공개되지 않습니다.</div>
+  <div class="public-notice"><strong>이용 안내</strong> 미리보기는 고정 예시 데이터입니다. Gemini AI 분석에는 API 키 설정이 필요하며, 회원가입은 기존 정책에 따라 로컬 PC에서만 가능합니다.</div>
 </section>
 {% endblock %}

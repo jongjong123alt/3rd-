@@ -20,11 +20,11 @@
   {% elif slug == 'checklist' %}
     <h2>운영체제 보고서 · 진행률 50% <span class="muted">예시</span></h2>
     <div class="checklist-progress"><div style="width:50%"></div></div>
-    <ul class="public-checklist"><li>☑ 자료 조사</li><li>☑ 목차 작성</li><li>☐ 본문 작성</li><li>☐ 제출 전 검토</li></ul>
+    <ul class="public-checklist"><li>{{ icon('check-square') }} 자료 조사</li><li>{{ icon('check-square') }} 목차 작성</li><li>{{ icon('square') }} 본문 작성</li><li>{{ icon('square') }} 제출 전 검토</li></ul>
     <div class="note"><strong>진행 기록</strong><p>보고서 자료 조사를 완료하고 목차를 정리했습니다. (예시)</p></div>
   {% elif slug == 'ai' %}
     <h2>AI 공지 분석 <span class="muted">예시</span></h2>
-    <div class="public-ai-sample"><strong>입력 예시</strong><p>운영체제 보고서 제출 안내: 프로세스와 스레드를 비교하고, 결과물을 PDF로 제출하세요.</p></div>
+    <ol class="analysis-steps" aria-label="분석 예시 흐름"><li><strong>01</strong> 공지 입력</li><li><strong>02</strong> 통합 분석</li><li><strong>03</strong> 검토 후 저장</li></ol><div class="public-ai-sample"><strong>입력 예시</strong><p>운영체제 보고서 제출 안내: 프로세스와 스레드를 비교하고, 결과물을 PDF로 제출하세요.</p></div>
     <div class="feature-panel"><h3>분석 결과 미리보기</h3><dl class="details"><div><dt>과제명</dt><dd>운영체제 보고서</dd></div><div><dt>필수 제출물</dt><dd>PDF 보고서</dd></div></dl><p><strong>해야 할 일</strong></p><ul><li>프로세스와 스레드의 차이 조사</li><li>보고서 작성</li><li>PDF 변환 및 검토</li></ul></div>
     <p class="muted">위 결과는 기능을 설명하기 위한 고정 예시이며 Gemini가 생성한 실시간 응답이 아닙니다. 실제 분석·저장·자동 재계획은 로그인 후 가능합니다.</p>
   {% elif slug == 'calendar' %}
@@ -40,7 +40,7 @@
     <div class="insight-panel"><div class="insight-bar-row"><div class="insight-bar-label"><span>시작 전</span><strong>2개 (33%)</strong></div><div class="insight-track"><div class="insight-fill insight-todo" style="width:33%"></div></div></div><div class="insight-bar-row"><div class="insight-bar-label"><span>진행 중</span><strong>3개 (50%)</strong></div><div class="insight-track"><div class="insight-fill insight-doing" style="width:50%"></div></div></div><div class="insight-bar-row"><div class="insight-bar-label"><span>완료</span><strong>1개 (17%)</strong></div><div class="insight-track"><div class="insight-fill insight-done" style="width:17%"></div></div></div></div>
   {% elif slug == 'files' %}
     <h2>첨부파일 관리 <span class="muted">예시</span></h2>
-    <div class="feature-panel"><h3>과제 첨부파일</h3><p>▤ 운영체제_보고서.pdf · PDF 파일</p><p class="muted">과제별 파일 첨부·다운로드·삭제는 로그인 후 가능합니다. 공지문 PDF·이미지 AI 분석은 AI 메뉴에서 사용할 수 있습니다.</p></div>
+    <div class="feature-panel"><h3>과제 첨부파일</h3><p>{{ icon('file-earmark-text') }} 운영체제_보고서.pdf · PDF 파일</p><p class="muted">과제별 파일 첨부·다운로드·삭제는 로그인 후 가능합니다. 공지문 PDF·이미지 AI 분석은 AI 메뉴에서 사용할 수 있습니다.</p></div>
   {% elif slug == 'alerts' %}
     <h2>마감 알림 · 오늘 할 일 <span class="muted">예시</span></h2>
     <div class="feature-panel"><h3>마감 알림</h3><ul><li>운영체제 보고서 — D-1</li><li>자료구조 실습 — D-3</li></ul><h3>오늘의 작업</h3><ul><li>보고서 목차 검토</li><li>코드 테스트</li></ul><p class="muted">실제 브라우저 알림은 로그인 후 사용자 동의가 필요합니다.</p></div>

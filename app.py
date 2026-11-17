@@ -158,7 +158,9 @@ def create_app(test_config=None):
         if "csrf_token" not in session:
             session["csrf_token"] = secrets.token_urlsafe(32)
         return {"csrf_token": session["csrf_token"], "statuses": STATUSES,
-                "priorities": PRIORITIES, "deadline_badge": deadline_badge}
+                "priorities": PRIORITIES, "deadline_badge": deadline_badge,
+                "ui_today": date.today(),
+                "ui_weeks": calendar.Calendar(firstweekday=0).monthdayscalendar(date.today().year, date.today().month)}
 
     @app.get("/")
     def dashboard():
@@ -247,6 +249,14 @@ def create_app(test_config=None):
             visible = sorted(visible, key=lambda a: (rank.get(a["priority"], 1), a["due_date"] or "9999-12-31", -a["id"]))
         elif sort_by == "recent":
             visible = sorted(visible, key=lambda a: -a["id"])
+        # Presentation-only checklist summaries; all access remains owner-scoped.
+        with connect_db() as connection:
+            progress_rows = connection.execute(
+                "SELECT c.assignment_id, COUNT(*) AS total, SUM(c.is_done) AS done "
+                "FROM checklist_items c JOIN assignments a ON a.id=c.assignment_id "
+                "WHERE a.owner_id IS ? GROUP BY c.assignment_id", (current_owner_id(),)
+            ).fetchall()
+        checklist_progress = {row["assignment_id"]: dict(row) for row in progress_rows}
         planning_data = dashboard_planning(connect_db, current_owner_id())
         notification_payload = {
             "user_id": str(current_owner_id() or "test"),
@@ -257,6 +267,8 @@ def create_app(test_config=None):
         }
         return render_template(
             "dashboard.html", assignments=visible, counts=counts,
+            checklist_progress=checklist_progress,
+            ui_due_dates=[a["due_date"] for a in assignments if a["status"] != "done" and a["due_date"]],
             status_chart=status_chart, course_chart=course_chart, insights=insights,
             planning=planning_data, notification_payload=notification_payload,
             filters={"q": query, "status": status_filter, "deadline": deadline_filter,

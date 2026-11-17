@@ -3,9 +3,11 @@
 {% block breadcrumb %}AI 공지 분석{% endblock %}
 {% block content %}
 <section class="content">
-  <div class="emoji">✧</div>
+  <div class="page-icon">{{ icon('stars') }}</div>
   <h1>AI 과제 공지 통합 분석</h1>
   <p class="intro">공지문 텍스트와 PDF·이미지를 한 번에 분석할 수 있습니다. 둘 중 하나만 입력해도 되고, 둘 다 입력하면 Gemini가 내용을 함께 검토합니다.</p>
+  <ol class="analysis-steps" aria-label="분석 과정"><li><strong>01</strong> 공지 입력</li><li><strong>02</strong> AI 통합 분석</li><li><strong>03</strong> 검토 후 저장</li></ol>
+  <div class="note ai-key-note"><strong>분석 전 확인</strong><p>실제 분석에는 Gemini API 키 설정이 필요합니다. 분석 결과는 원문과 대조한 뒤 저장해 주세요.</p></div>
   <form class="assignment-form" id="ai-analysis-form" method="post" enctype="multipart/form-data" action="{{ url_for('ai_analyze') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <label for="notice">과제 공지 내용·추가 요구사항 (선택)</label>
@@ -14,7 +16,7 @@
     <label for="ai-document">과제 공지 PDF·이미지 (선택)</label>
     <input id="ai-document" type="file" name="document" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg">
     <p class="muted">PDF·PNG·JPG, 최대 5MB. 텍스트 또는 파일 중 하나는 필수입니다. 입력 내용과 파일은 Gemini API로 전송되며, 분석용 원본 파일은 이 앱에 저장하지 않습니다. 개인정보나 API 키를 포함하지 마세요.</p>
-    <div class="form-actions"><button class="primary-button" id="ai-submit-button" type="submit">✧ 공지문·파일 함께 AI 분석하기</button></div>
+    <div class="form-actions"><button class="primary-button" id="ai-submit-button" type="submit">공지문·파일 함께 AI 분석하기</button></div>
     <p class="muted" id="ai-loading-status" role="status" aria-live="polite" hidden>AI가 입력한 공지와 파일을 함께 분석하고 있습니다. 잠시 기다려 주세요.</p>
   </form>
   <script>
@@ -79,7 +81,7 @@
       <textarea id="ai-tasks" name="tasks" maxlength="10000" rows="5">{{ result.tasks|join('\n') }}</textarea>
       <p class="muted">할 일은 최대 30개, 항목당 300자까지 저장할 수 있습니다.</p>
       <div class="form-actions">
-        <button class="primary-button" id="ai-save-button" type="submit">✓ 확인 후 과제로 저장</button>
+        <button class="primary-button" id="ai-save-button" type="submit">확인 후 과제로 저장</button>
         <a class="secondary-button" href="{{ url_for('dashboard') }}">취소</a>
       </div>
     </form>

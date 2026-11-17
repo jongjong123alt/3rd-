@@ -1,40 +1,54 @@
+{% macro icon(name, extra='') -%}<img class="icon {{ extra }}" src="{{ url_for('static', filename='icons/' ~ name ~ '.svg') }}" alt="" width="20" height="20">{%- endmacro %}
+{% set signed_in = session.get('user_id') or (config.TESTING and not config.AUTH_REQUIRED) %}
 <!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#214c3d">
   <title>{% block title %}과제 노트{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/campus.css') }}">
+  <script src="{{ url_for('static', filename='js/campus.js') }}" defer></script>
 </head>
-<body>
+<body class="{{ 'workspace' if signed_in else 'public-site' }}">
+  <a class="skip-link" href="#main-content">본문으로 건너뛰기</a>
   <div class="layout">
-    <aside class="sidebar">
-      <div class="brand"><span class="brand-icon">▦</span> 과제 노트 <span class="beta">BETA</span></div>
-      {% if session.get('user_id') or (config.TESTING and not config.AUTH_REQUIRED) %}
-      <div class="sidebar-label">워크스페이스</div>
-      <a class="nav active" href="{{ url_for('dashboard') }}">▤ <span>대시보드</span></a>
-      <a class="nav" href="{{ url_for('ai_analyze') }}">✧ <span>AI 공지 분석</span></a>
-      <a class="nav" href="{{ url_for('calendar_view') }}">▦ <span>마감 달력</span></a>
-      <a class="nav" href="{{ url_for('schedule_view') }}">⚑ <span>일정 충돌 확인</span></a>
-      {% else %}
-      <div class="sidebar-label">서비스 미리보기</div>
-      <a class="nav" href="{{ url_for('dashboard') }}">⌂ <span>서비스 소개</span></a>
-      <a class="nav" href="{{ url_for('public_features') }}">☷ <span>전체 기능 (21개)</span></a>
-      <a class="nav" href="{{ url_for('feature_preview', slug='dashboard') }}">▤ <span>대시보드 미리보기</span></a>
-      <a class="nav" href="{{ url_for('feature_preview', slug='ai') }}">✧ <span>AI 분석 미리보기</span></a>
-      <a class="nav" href="{{ url_for('feature_preview', slug='calendar') }}">▦ <span>달력 미리보기</span></a>
-      <a class="nav" href="{{ url_for('feature_preview', slug='schedule') }}">⚑ <span>일정 충돌 미리보기</span></a>
-      {% endif %}
-      <div class="sidebar-bottom">AI 과제 분석 · 일정 관리<br><small>4단계 AI 공지 분석</small></div>
-    </aside>
-    <main class="main">
-      <header class="topbar"><span>{{ '내 워크스페이스' if session.get('user_id') else '과제 노트' }} / {% block breadcrumb %}대시보드{% endblock %}</span><span class="stage">프로토타입</span>{% if session.get('user_id') %}<form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="secondary-button">로그아웃</button></form>{% else %}<div class="public-top-actions"><a href="{{ url_for('login') }}">로그인</a><a class="secondary-button" href="{{ url_for('register') }}">회원가입</a></div>{% endif %}</header>
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-          <div class="toast {{ category }}" role="status">{{ message }}</div>
+    <aside class="sidebar" id="site-sidebar" aria-label="주 메뉴">
+      <a class="brand" href="{{ url_for('dashboard') }}">{{ icon('journal-text', 'brand-icon') }}<span>과제 노트</span></a>
+      <div class="sidebar-label">{{ '나의 캠퍼스' if signed_in else '서비스 미리보기' }}</div>
+      <nav aria-label="{{ '워크스페이스' if signed_in else '서비스' }}">
+      {% if signed_in %}
+        {% for endpoint, label, image in [('dashboard','대시보드','house-door'),('ai_analyze','AI 공지 분석','stars'),('calendar_view','마감 달력','calendar3'),('schedule_view','일정 충돌','exclamation-triangle')] %}
+        <a class="nav {{ 'active' if request.endpoint == endpoint else '' }}" href="{{ url_for(endpoint) }}" {% if request.endpoint == endpoint %}aria-current="page"{% endif %}>{{ icon(image) }}<span>{{ label }}</span></a>
         {% endfor %}
-      {% endwith %}
+        <a class="nav" href="{{ url_for('dashboard') }}#assignments">{{ icon('grid') }}<span>과제 관리</span></a>
+      {% else %}
+        {% for endpoint, label, image in [('dashboard','서비스 소개','house-door'),('public_features','전체 기능','grid')] %}
+        <a class="nav {{ 'active' if request.endpoint == endpoint else '' }}" href="{{ url_for(endpoint) }}" {% if request.endpoint == endpoint %}aria-current="page"{% endif %}>{{ icon(image) }}<span>{{ label }}</span></a>
+        {% endfor %}
+        {% for slug, label, image in [('dashboard','대시보드 미리보기','journal-text'),('ai','AI 분석 시연','stars'),('calendar','달력 미리보기','calendar3'),('schedule','일정 충돌 미리보기','exclamation-triangle')] %}
+        <a class="nav {{ 'active' if request.view_args and request.view_args.get('slug') == slug else '' }}" href="{{ url_for('feature_preview', slug=slug) }}" {% if request.view_args and request.view_args.get('slug') == slug %}aria-current="page"{% endif %}>{{ icon(image) }}<span>{{ label }}</span></a>
+        {% endfor %}
+      {% endif %}
+      </nav>
+      <div class="sidebar-bottom">
+        <p class="sidebar-message">작은 완료가 쌓이는<br>나만의 한 학기.</p>
+        {% if session.get('user_id') %}
+        <div class="account-label">{{ icon('person-circle') }}<span>내 워크스페이스</span></div>
+        <form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="logout-button">{{ icon('box-arrow-right') }} 로그아웃</button></form>
+        {% else %}<a class="nav" href="{{ url_for('login') }}">{{ icon('person-circle') }}<span>로그인</span></a>{% endif %}
+      </div>
+    </aside>
+    <main class="main" id="main-content" tabindex="-1">
+      <header class="topbar">
+        <button class="menu-toggle secondary-button" aria-label="메뉴 열기" aria-controls="site-sidebar" aria-expanded="false" type="button">{{ icon('list') }} 메뉴</button>
+        <span class="breadcrumb">과제 노트 <span aria-hidden="true">/</span> {% block breadcrumb %}{{ '대시보드' if signed_in else '서비스 소개' }}{% endblock %}</span>
+        {% if not signed_in %}<div class="public-top-actions"><a href="{{ url_for('login') }}">로그인</a><a class="secondary-button" href="{{ url_for('register') }}">회원가입</a></div>{% else %}<span class="topbar-note">오늘도, 하나씩 차근차근.</span>{% endif %}
+      </header>
+      {% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="toast {{ category }}" role="status">{{ message }}</div>{% endfor %}{% endwith %}
       {% block content %}{% endblock %}
+      <footer class="site-footer">과제 노트 <span>공지부터 마감까지, 나의 속도로.</span></footer>
     </main>
   </div>
 </body>

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}{{ '회원가입' if mode == 'register' else '로그인' }} · 과제 노트{% endblock %}
+{% block breadcrumb %}{{ '회원가입' if mode == 'register' else '로그인' }}{% endblock %}
 {% block content %}
 <section class="content auth-content">
   <h1>{{ '새 계정 만들기' if mode == 'register' else '로그인' }}</h1>
