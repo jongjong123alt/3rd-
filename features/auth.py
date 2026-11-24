@@ -1,6 +1,7 @@
-"""Local account authentication for the assignment workspace (F-18)."""
+"""Account authentication for the assignment workspace (F-18)."""
 import re
 import secrets
+import sqlite3
 import time
 from flask import abort, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -24,8 +25,8 @@ def register_auth(app, connect_db):
 
     @app.route("/auth/register", methods=["GET", "POST"])
     def register():
-        # Local-only signup: prevents remote first-user capture of migrated data.
-        if not app.config.get("WEB_SIGNUP_ENABLED", True) or request.remote_addr not in _LOCAL:
+        # Public signup never adopts unowned data in production.
+        if not app.config.get("WEB_SIGNUP_ENABLED", True):
             abort(403)
         if request.method == "GET":
             return render_template("auth.html", mode="register", error=None)
@@ -34,21 +35,23 @@ def register_auth(app, connect_db):
         if not re.fullmatch(r"[a-z0-9_]{3,32}", username) or not 10 <= len(password) <= 128:
             return render_template("auth.html", mode="register", error="아이디는 영문 소문자·숫자·밑줄 3~32자, 비밀번호는 10~128자로 입력해 주세요."), 400
         with connect_db() as db:
-            first_user = db.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0
+            adopt_legacy = (app.config.get("LEGACY_LOCAL_ADOPTION_ENABLED", False)
+                            and request.remote_addr in _LOCAL
+                            and db.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0)
             try:
                 cursor = db.execute("INSERT INTO users(username, password_hash) VALUES (?,?)",
                                     (username, generate_password_hash(password)))
-            except Exception as exc:
+            except sqlite3.IntegrityError as exc:
                 if "UNIQUE" in str(exc).upper():
                     return render_template("auth.html", mode="register", error="이미 사용 중인 아이디입니다."), 400
                 raise
             user_id = cursor.lastrowid
-            if first_user:
+            if adopt_legacy:
                 db.execute("UPDATE assignments SET owner_id=? WHERE owner_id IS NULL", (user_id,))
         session.clear()
         session["user_id"] = user_id
         session["csrf_token"] = secrets.token_urlsafe(32)
-        flash("계정이 생성되었습니다. 기존 과제는 첫 계정으로 이전되었습니다." if first_user else "계정이 생성되었습니다.", "success")
+        flash("계정이 생성되었습니다. 기존 과제는 첫 계정으로 이전되었습니다." if adopt_legacy else "계정이 생성되었습니다.", "success")
         return redirect(url_for("dashboard"))
 
     @app.route("/auth/login", methods=["GET", "POST"])

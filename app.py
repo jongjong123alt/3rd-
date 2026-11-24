@@ -145,7 +145,8 @@ def create_app(test_config=None):
     app.config.update(SECRET_KEY=os.environ.get("FLASK_SECRET_KEY") or secrets.token_hex(32),
                       MAX_CONTENT_LENGTH=64 * 1024 * 1024,
                       SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax",
-                      SESSION_COOKIE_SECURE=production, WEB_SIGNUP_ENABLED=not production)
+                      SESSION_COOKIE_SECURE=production, WEB_SIGNUP_ENABLED=True,
+                      LEGACY_LOCAL_ADOPTION_ENABLED=not production)
     if test_config:
         app.config.update(test_config)
     init_db()

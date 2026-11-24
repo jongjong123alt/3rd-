@@ -178,7 +178,7 @@ class AuthIsolationTests(unittest.TestCase):
         }).status_code, 400)
         self.assertEqual(self.client.post("/auth/register", data={
             "csrf_token": self.token, "username": "tester", "password": "long-password-123"
-        }, environ_overrides={"REMOTE_ADDR": "198.51.100.12"}).status_code, 403)
+        }, environ_overrides={"REMOTE_ADDR": "198.51.100.12"}).status_code, 302)
 
 
 if __name__ == "__main__":
