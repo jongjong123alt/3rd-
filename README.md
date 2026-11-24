@@ -84,3 +84,7 @@ GitHub Actions가 push 시 Python 문법 검사 및 `python -m unittest discover
 [최종 제출 체크리스트](docs/DEMO_DAY_CHECKLIST.md) · [AI 기능 설명](docs/AI_FUNCTION.md) · [최신 검증 기록](docs/DEMO_DAY_VERIFICATION.md)
 
 제출 기한: 2026-11-30(월) 22:00(한국 시간), 카카오워크 수업 1:1 대화방. 2026-11-24 확인 기준 서비스는 미배포 상태입니다.
+
+## 운영 배포
+
+Render 연결용 `render.yaml`, Gunicorn 실행 설정과 영구 데이터 경로를 제공합니다. [배포 안내](docs/DEPLOYMENT.md)를 따라 환경변수·영구 디스크·발표 계정을 준비하세요. 제공된 Render Blueprint는 유료 서비스와 디스크를 사용하며, 실제 서비스 생성은 별도입니다.

@@ -20,7 +20,8 @@ from features.productivity import register_productivity
 from services.requirement_checks import inspect_requirements
 
 BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "instance" / "assignments.db"
+DATA_DIR = Path(os.environ.get("APP_DATA_DIR") or BASE_DIR / "instance").expanduser().resolve()
+DB_PATH = DATA_DIR / "assignments.db"
 STATUSES = {"todo": "시작 전", "doing": "진행 중", "done": "완료"}
 PRIORITIES = {"high": "높음", "medium": "보통", "low": "낮음"}
 
@@ -138,13 +139,19 @@ def validate_form(form):
 
 def create_app(test_config=None):
     app = Flask(__name__)
+    production = os.environ.get("APP_ENV") == "production"
+    if production and not os.environ.get("FLASK_SECRET_KEY"):
+        raise RuntimeError("Production requires FLASK_SECRET_KEY")
     app.config.update(SECRET_KEY=os.environ.get("FLASK_SECRET_KEY") or secrets.token_hex(32),
                       MAX_CONTENT_LENGTH=64 * 1024 * 1024,
-                      SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax")
+                      SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax",
+                      SESSION_COOKIE_SECURE=production, WEB_SIGNUP_ENABLED=not production)
     if test_config:
         app.config.update(test_config)
     init_db()
     register_auth(app, connect_db)
+    from features.account_cli import register_account_cli
+    register_account_cli(app, connect_db)
     register_public(app)
     register_planning(app, connect_db, get_assignment, current_owner_id)
     register_attachments(app, connect_db, get_assignment, lambda: DB_PATH)

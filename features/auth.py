@@ -25,7 +25,7 @@ def register_auth(app, connect_db):
     @app.route("/auth/register", methods=["GET", "POST"])
     def register():
         # Local-only signup: prevents remote first-user capture of migrated data.
-        if request.remote_addr not in _LOCAL:
+        if not app.config.get("WEB_SIGNUP_ENABLED", True) or request.remote_addr not in _LOCAL:
             abort(403)
         if request.method == "GET":
             return render_template("auth.html", mode="register", error=None)
