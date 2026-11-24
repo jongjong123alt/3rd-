@@ -814,6 +814,117 @@ h3 {
   border-top: 1px solid var(--line);
 }
 
+/* ---------- Dashboard: compact so every section fits one screen ---------- */
+.dash .tile-inner {
+  padding-top: 22px;
+  padding-bottom: 24px;
+}
+.dash-hero h1 {
+  font-size: 34px;
+  letter-spacing: -1px;
+  margin: 4px 0 2px;
+}
+.dash-hero .workspace-eyebrow {
+  margin: 0;
+}
+.dash-tagline {
+  font-size: 17px;
+}
+.dash-actions {
+  margin: 14px 0 18px;
+  gap: 10px;
+}
+.dash-actions .pill {
+  min-height: 38px;
+  font-size: 14px;
+  padding-block: 6px;
+}
+.dash-section-head {
+  margin-bottom: 8px;
+}
+.dash-section-head h2 {
+  font-size: 16px;
+}
+.dash-section-head .text-link {
+  min-height: 28px;
+}
+.week-day a {
+  height: 100%;
+  box-sizing: border-box;
+  min-height: 74px;
+  gap: 8px;
+  padding: 10px 14px;
+}
+.week-day.week-today a {
+  padding: 9px 13px;
+}
+.week-day-count strong {
+  font-size: 24px;
+}
+.cover-add {
+  top: 10px;
+}
+.page-cover-actions {
+  top: 10px;
+}
+.cover-panel {
+  top: 46px;
+}
+.dash .tile-light .tile-inner {
+  padding-top: 22px;
+}
+.dash-grid {
+  gap: 48px;
+}
+.today-row {
+  padding: 4px 0;
+}
+.today-row a {
+  gap: 0;
+}
+.dash .overview-empty {
+  padding: 16px 18px;
+}
+.dash-progress {
+  margin-top: 18px;
+}
+.dash-progress .dash-section-head {
+  margin-bottom: 6px;
+}
+.dash .overview-disclosures {
+  margin-top: 14px;
+}
+.dash .overview-disclosures > details > summary {
+  min-height: 38px;
+  padding: 9px 0;
+}
+.dash .overview-stats {
+  margin-bottom: 18px;
+}
+.dash .overview-stats > a,
+.dash .overview-stats > a:first-child {
+  padding: 8px 14px;
+}
+.dash .overview-stats strong {
+  font-size: 22px;
+  line-height: 1.25;
+}
+.timeline-item a {
+  padding: 2px 0 8px;
+  gap: 0;
+  line-height: 1.4;
+}
+.timeline-item::before {
+  top: 8px;
+}
+.deadline-timeline::before {
+  top: 8px;
+  bottom: 14px;
+}
+.dash-aside .text-link {
+  min-height: 28px;
+}
+
 /* ---------- Tablet (768–1100px) ---------- */
 @media (max-width: 1100px) {
   .content,
