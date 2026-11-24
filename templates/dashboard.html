@@ -7,25 +7,44 @@
 {% set today_count = planning.today_plans|length + planning.today_tasks|length %}
 {% set week_days = [] %}{% for offset in range(7) %}{% set day = ui_today.fromordinal(ui_today.toordinal() + offset) %}{% set _ = week_days.append({'date': day, 'iso': day.isoformat(), 'count': ui_due_dates|select('equalto', day.isoformat())|list|length}) %}{% endfor %}
 {% set week_total = week_days|sum(attribute='count') %}
-<section class="content overview-content dash">
-  <header class="dash-heading">
-    <div><p class="workspace-eyebrow">내 과제 대시보드 · {{ ui_today.month }}월 {{ ui_today.day }}일 {{ '월화수목금토일'[ui_today.weekday()] }}요일</p>
-      <h1>오늘 할 일 {{ today_count }}개<span class="dash-heading-sep" aria-hidden="true"> · </span><span class="dash-heading-sub">7일 안에 마감 {{ week_total }}개</span></h1></div>
-    <div class="dash-actions"><a class="secondary-button" href="{{ url_for('ai_analyze') }}">{{ icon('stars') }} AI 공지 분석</a><a class="primary-button" href="{{ url_for('new_assignment') }}">{{ icon('plus-lg') }} 새 과제</a></div>
-  </header>
-
-  <section class="week-strip-section" aria-labelledby="week-heading">
-    <div class="dash-section-head"><h2 id="week-heading">앞으로 7일 마감</h2><a class="text-link" href="{{ url_for('calendar_view') }}">마감 달력 {{ icon('chevron-right') }}</a></div>
-    <ol class="week-strip">{% for day in week_days %}
-      <li class="week-day{{ ' week-today' if loop.first }}{{ ' has-due' if day.count }}{{ ' is-weekend' if day.date.weekday() >= 5 }}">
-        <a href="{{ url_for('calendar_view', month=day.iso[:7]) }}" aria-label="{{ day.date.month }}월 {{ day.date.day }}일{{ ' 오늘' if loop.first }}, 마감 {{ day.count }}개">
-          <span class="week-day-label">{{ '월화수목금토일'[day.date.weekday()] }} {{ day.date.day }}{% if loop.first %} · 오늘{% endif %}</span>
-          {% if day.count %}<span class="week-day-count"><strong>{{ day.count }}</strong><span class="week-day-unit">개 마감</span></span>{% else %}<span class="week-day-empty">마감 없음</span>{% endif %}
-        </a></li>{% endfor %}
-    </ol>
-  </section>
-
-  <div class="dash-grid">
+<div class="dash" data-cover-key="{{ session.get('user_id') or 'local' }}">
+<section class="tile tile-parchment dash-hero" aria-labelledby="dash-title">
+  <div class="page-cover" id="page-cover" aria-hidden="true" hidden></div>
+  <div class="tile-inner">
+    <div class="page-cover-actions" id="cover-actions" hidden>
+      <button class="cover-chip" type="button" data-cover-open aria-haspopup="dialog" aria-controls="cover-panel">커버 변경</button>
+      <button class="cover-chip" type="button" data-cover-reposition aria-pressed="false">위치 조정</button>
+    </div>
+    <button class="cover-add" type="button" id="cover-add" data-cover-open aria-haspopup="dialog" aria-controls="cover-panel">{{ icon('plus-lg') }} 커버 추가</button>
+    <div class="cover-panel" id="cover-panel" role="dialog" aria-modal="false" aria-labelledby="cover-panel-title" hidden>
+      <div class="cover-panel-head"><h2 id="cover-panel-title">대시보드 커버</h2><button class="cover-panel-close" type="button" data-cover-close aria-label="커버 설정 닫기">닫기</button></div>
+      <p class="cover-panel-note">이 브라우저에만 저장돼요. 다른 기기나 브라우저에는 표시되지 않아요.</p>
+      <h3>기본 커버</h3>
+      <div class="cover-presets" role="list"></div>
+      <h3>내 이미지</h3>
+      <label class="cover-upload"><span>이미지 업로드</span><input type="file" id="cover-file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+      <p class="cover-panel-note">JPG·PNG·WEBP·GIF, 10MB 이하. 저장할 때 가로 1920px 이하로 줄여요.</p>
+      <p class="cover-status" id="cover-status" role="status" aria-live="polite"></p>
+      <div class="cover-panel-foot"><button class="secondary-button" type="button" data-cover-remove>커버 제거</button></div>
+    </div>
+    <p class="workspace-eyebrow">내 과제 대시보드 · {{ ui_today.month }}월 {{ ui_today.day }}일 {{ '월화수목금토일'[ui_today.weekday()] }}요일</p>
+    <h1 id="dash-title">오늘 할 일 {{ today_count }}개</h1>
+    <p class="dash-tagline">앞으로 7일 안에 마감 {{ week_total }}개{% if insights.overdue %} · 기한 지난 과제 {{ insights.overdue }}개{% endif %}</p>
+    <div class="dash-actions"><a class="primary-button pill" href="#today-heading">오늘 할 일 보기</a><a class="secondary-button pill" href="{{ url_for('ai_analyze') }}">AI 공지 분석</a></div>
+    <section class="week-strip-section" aria-labelledby="week-heading">
+      <div class="dash-section-head"><h2 id="week-heading">앞으로 7일 마감</h2><a class="text-link" href="{{ url_for('calendar_view') }}">마감 달력 {{ icon('chevron-right') }}</a></div>
+      <ol class="week-strip">{% for day in week_days %}
+        <li class="week-day{{ ' week-today' if loop.first }}{{ ' has-due' if day.count }}">
+          <a href="{{ url_for('calendar_view', month=day.iso[:7]) }}" aria-label="{{ day.date.month }}월 {{ day.date.day }}일{{ ' 오늘' if loop.first }}, 마감 {{ day.count }}개">
+            <span class="week-day-label">{{ '월화수목금토일'[day.date.weekday()] }} {{ day.date.day }}{% if loop.first %} · 오늘{% endif %}</span>
+            {% if day.count %}<span class="week-day-count"><strong>{{ day.count }}</strong><span class="week-day-unit">개 마감</span></span>{% else %}<span class="week-day-empty">마감 없음</span>{% endif %}
+          </a></li>{% endfor %}
+      </ol>
+    </section>
+  </div>
+</section>
+<section class="tile tile-light">
+  <div class="tile-inner dash-grid">
     <div class="dash-main">
       <section aria-labelledby="today-heading">
         <div class="dash-section-head"><h2 id="today-heading">오늘 할 일</h2><span class="muted">직접 지정 · 오늘 마감 · 학습 계획</span></div>
@@ -68,6 +87,7 @@
       </section>
     </aside>
   </div>
-  <script id="notification-data" type="application/json">{{ notification_payload|tojson }}</script><script src="{{ url_for('static', filename='js/deadline_notifications.js') }}" defer></script>
 </section>
+  <script id="notification-data" type="application/json">{{ notification_payload|tojson }}</script><script src="{{ url_for('static', filename='js/deadline_notifications.js') }}" defer></script><script src="{{ url_for('static', filename='js/cover.js') }}" defer></script>
+</div>
 {% endblock %}

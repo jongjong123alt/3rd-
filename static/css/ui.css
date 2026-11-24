@@ -265,43 +265,83 @@ h3 {
   border-radius: var(--radius-lg);
 }
 
-/* ---------- Dashboard (option A + 7-day strip) ---------- */
-.dash-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 24px;
-  margin-bottom: 28px;
+/* ---------- Dashboard: hero tile + 7-day cards + today/timeline ---------- */
+/* Scoped to .dash so no other screen changes. Uses the forest/ivory tokens. */
+.dash .tile {
+  width: 100%;
 }
-.dash-heading h1 {
-  margin: 4px 0 0;
+.dash .tile-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 56px 48px;
 }
-.dash-heading-sep,
-.dash-heading-sub {
-  color: var(--muted);
-  font-weight: 600;
+.dash .tile-parchment {
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+.dash .tile-light {
+  background: var(--white);
+}
+.dash .pill {
+  border-radius: 999px;
+  padding-inline: 22px;
+}
+.dash .secondary-button.pill {
+  background: transparent;
+  color: var(--forest);
+  border-color: var(--forest);
+}
+.dash .primary-button:active,
+.dash .secondary-button:active {
+  transform: scale(0.97);
+}
+.dash-hero {
+  position: relative;
+}
+.dash-hero > .tile-inner {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+.dash-hero h1 {
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -1.4px;
+  margin: 10px 0 6px;
+}
+.dash-tagline {
+  margin: 0;
+  font-size: 22px;
+  color: var(--ink);
+  letter-spacing: -0.4px;
 }
 .dash-actions {
   display: flex;
-  gap: 8px;
-  flex-shrink: 0;
+  justify-content: center;
+  gap: 12px;
+  margin: 24px 0 44px;
+}
+.dash-actions .pill {
+  min-height: 44px;
+  font-size: 15px;
+}
+.dash .week-strip-section {
+  text-align: left;
 }
 .dash-section-head {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 .dash-section-head h2 {
   margin: 0;
-  font-size: 16px;
+  font-size: 18px;
 }
 .dash-section-head .muted {
   font-size: 13px;
-}
-.week-strip-section {
-  margin-bottom: 32px;
 }
 .week-strip {
   list-style: none;
@@ -309,34 +349,27 @@ h3 {
   padding: 0;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-.week-day + .week-day {
-  border-left: 1px solid var(--line);
+  gap: 10px;
 }
 .week-day a {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 14px;
-  min-height: 92px;
-  padding: 12px 14px;
-  text-decoration: none;
+  gap: 16px;
+  min-height: 108px;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  border: 1px solid var(--line);
   color: var(--ink);
+  text-decoration: none;
 }
 .week-day a:hover {
-  background: var(--paper);
-}
-.week-day a:focus-visible {
-  outline-offset: -3px !important;
-}
-.week-day.is-weekend a {
-  background: var(--paper);
+  border-color: #c9d2cb;
 }
 .week-day.week-today a {
-  background: var(--sage);
+  border: 2px solid var(--forest);
+  padding: 13px 15px;
 }
 .week-day-label {
   font-size: 13px;
@@ -349,24 +382,25 @@ h3 {
 .week-day-count {
   font-size: 13px;
   color: var(--ink);
-  border-left: 3px solid var(--forest);
-  padding-left: 8px;
 }
 .week-day-count strong {
-  font-size: 20px;
-  margin-right: 2px;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  margin-right: 3px;
+  color: var(--forest);
 }
-.week-day:nth-child(-n + 4).has-due .week-day-count {
-  border-left-color: var(--warn);
+.week-day:nth-child(-n + 4).has-due .week-day-count strong {
+  color: var(--warn);
 }
 .week-day-empty {
-  font-size: 12.5px;
+  font-size: 13px;
   color: var(--faint);
 }
 .dash-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 380px;
-  gap: 48px;
+  gap: 56px;
   align-items: start;
 }
 .today-list {
@@ -377,7 +411,7 @@ h3 {
 }
 .today-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   padding: 10px 0;
   border-bottom: 1px solid var(--line);
@@ -386,12 +420,18 @@ h3 {
   margin: 0;
 }
 .today-row .check-toggle {
-  min-width: 36px;
-  min-height: 36px;
-  background: none;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  margin: 0;
   border: 0;
-  cursor: pointer;
   border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .today-row .check-toggle:hover {
   background: var(--sage);
@@ -401,8 +441,8 @@ h3 {
   height: 20px;
 }
 .today-row .plan-mark {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -416,10 +456,9 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 6px 0;
-  text-decoration: none;
-  color: var(--ink);
   min-width: 0;
+  color: var(--ink);
+  text-decoration: none;
 }
 .today-row a strong {
   font-weight: 600;
@@ -430,12 +469,13 @@ h3 {
   color: var(--muted);
 }
 .today-row a:hover strong {
+  color: var(--forest);
   text-decoration: underline;
 }
 .today-work-more summary {
   cursor: pointer;
-  font-size: 13.5px;
   color: var(--forest);
+  font-size: 13.5px;
   font-weight: 600;
   padding: 12px 0;
 }
@@ -446,10 +486,10 @@ h3 {
   display: flex;
   gap: 14px;
   min-height: 0;
-  padding: 22px 22px 14px;
-  border: 1px dashed #d5dad5;
-  background: var(--paper);
+  padding: 22px;
   border-radius: var(--radius-lg);
+  background: var(--paper);
+  border: 1px dashed #d5dad5;
 }
 .dash .overview-empty h3 {
   margin: 0 0 4px;
@@ -459,7 +499,7 @@ h3 {
   margin: 0 0 4px;
 }
 .dash-progress {
-  margin-top: 36px;
+  margin-top: 40px;
 }
 .dash-progress .insight-track {
   height: 8px;
@@ -476,10 +516,13 @@ h3 {
   margin-left: 6px;
 }
 .dash .overview-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: 0;
-  margin-bottom: 28px;
+  margin-bottom: 36px;
+  overflow: hidden;
 }
 .dash .overview-stats > a,
 .dash .overview-stats > a:first-child {
@@ -487,7 +530,7 @@ h3 {
   gap: 2px;
 }
 .dash .overview-stats strong {
-  font-size: 22px;
+  font-size: 26px;
   color: var(--ink);
 }
 .dash .overview-stats .needs-attention {
@@ -519,7 +562,7 @@ h3 {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--white);
   border: 2px solid var(--forest);
 }
 .timeline-item.is-soon::before,
@@ -536,16 +579,16 @@ h3 {
   flex-direction: column;
   gap: 1px;
   padding: 6px 0 14px;
-  text-decoration: none;
   color: var(--ink);
+  text-decoration: none;
 }
 .timeline-date {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--forest);
   display: flex;
   align-items: center;
   gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--forest);
 }
 .timeline-item.is-soon .timeline-date,
 .timeline-item.is-today .timeline-date {
@@ -565,13 +608,214 @@ h3 {
 .timeline-item a:hover strong {
   text-decoration: underline;
 }
+/* Flash message on the dashboard sits on the hero band, aligned with content */
+.main:has(.dash) > .toast {
+  margin: 0 auto;
+  background: var(--white);
+  box-shadow: 0 0 0 100vmax var(--paper);
+  clip-path: inset(-20px -100vmax -20px -100vmax);
+  position: relative;
+  top: 20px;
+  margin-bottom: 20px;
+}
+
+/* ---------- Dashboard cover (Notion-style, this browser only) ---------- */
+.page-cover {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-color: var(--paper);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center 50%;
+}
+.page-cover[hidden] {
+  display: none;
+}
+.page-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.dash.cover-dark .page-cover::after {
+  background: rgba(0, 0, 0, 0.38);
+}
+.dash.cover-light .page-cover::after {
+  background: rgba(255, 255, 255, 0.4);
+}
+.dash-hero.is-repositioning {
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+}
+.page-cover-actions {
+  position: absolute;
+  right: 48px;
+  top: 16px;
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.page-cover-actions[hidden] {
+  display: none;
+}
+.dash-hero:hover .page-cover-actions,
+.page-cover-actions:focus-within,
+.dash-hero.is-repositioning .page-cover-actions {
+  opacity: 1;
+}
+.cover-chip {
+  min-height: 32px;
+  padding: 4px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cover-chip[hidden] {
+  display: none;
+}
+.dash.cover-dark .dash-hero h1,
+.dash.cover-dark .dash-hero h2,
+.dash.cover-dark .dash-tagline,
+.dash.cover-dark .dash-hero .workspace-eyebrow,
+.dash.cover-dark .dash-hero .dash-section-head .text-link {
+  color: #fff;
+}
+.dash.cover-dark .dash-hero .dash-section-head .text-link .icon {
+  filter: invert(1);
+}
+.dash.cover-dark .dash-hero .secondary-button.pill {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.85);
+}
+.cover-add {
+  position: absolute;
+  left: 48px;
+  top: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+.cover-add .icon {
+  width: 14px;
+  height: 14px;
+}
+.cover-add:hover {
+  background: var(--sage);
+  color: var(--ink);
+}
+.dash.has-cover .cover-add {
+  display: none;
+}
+.cover-panel {
+  position: absolute;
+  left: 48px;
+  top: 56px;
+  z-index: 25;
+  width: 380px;
+  max-width: calc(100% - 96px);
+  padding: 20px;
+  text-align: left;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgba(31, 36, 33, 0.12);
+}
+.dash.has-cover .cover-panel {
+  left: auto;
+  right: 48px;
+}
+.cover-panel[hidden] {
+  display: none;
+}
+.cover-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.cover-panel h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.cover-panel h3 {
+  margin: 18px 0 8px;
+  font-size: 14px;
+}
+.cover-panel-close {
+  border: 0;
+  background: none;
+  color: var(--forest);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  min-height: 32px;
+}
+.cover-panel-note {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.cover-presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.cover-preset {
+  height: 56px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background-size: cover;
+  cursor: pointer;
+}
+.cover-upload {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid var(--forest);
+  color: var(--forest);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cover-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.cover-upload:focus-within {
+  outline: 2px solid var(--forest);
+  outline-offset: 3px;
+}
+.cover-status {
+  min-height: 1.4em;
+  margin: 10px 0 0;
+  font-size: 13px;
+}
+.cover-panel-foot {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
 
 /* ---------- Tablet (768–1100px) ---------- */
 @media (max-width: 1100px) {
-  .dash-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 36px;
-  }
   .content,
   .overview-content,
   .manager-content {
@@ -583,21 +827,45 @@ h3 {
     padding-right: 32px;
   }
 }
-@media (max-width: 900px) {
-  .dash-heading {
-    flex-direction: column;
-    align-items: flex-start;
+@media (max-width: 1100px) {
+  .dash-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
+  }
+  .dash .tile-inner {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+  .dash-hero h1 {
+    font-size: 38px;
+  }
+  .dash-tagline {
+    font-size: 19px;
+  }
+  .week-strip {
+    gap: 6px;
   }
   .week-day a {
-    padding: 10px 8px;
-    min-height: 84px;
+    padding: 10px;
+    min-height: 96px;
+  }
+  .week-day.week-today a {
+    padding: 9px;
   }
   .week-day-count strong {
-    font-size: 17px;
+    font-size: 24px;
   }
   .week-day-unit {
     display: block;
     font-size: 12px;
+  }
+  .cover-add,
+  .cover-panel {
+    left: 32px;
+  }
+  .page-cover-actions,
+  .dash.has-cover .cover-panel {
+    right: 32px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
