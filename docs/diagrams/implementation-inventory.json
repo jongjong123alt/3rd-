@@ -1,0 +1,699 @@
+{
+  "basis_commit": "537e49f3b78bc155d71c68f34ef7145fae46e24f",
+  "generated_on": "2026-11-24",
+  "tables": {
+    "assignment_notes": {
+      "sql": "CREATE TABLE assignment_notes (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            assignment_id INTEGER NOT NULL,\n            kind TEXT NOT NULL DEFAULT 'note' CHECK(kind IN ('note','progress')),\n            content TEXT NOT NULL,\n            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,\n            FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE\n        )",
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "assignment_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "kind",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": "'note'",
+          "pk": 0
+        },
+        {
+          "cid": 3,
+          "name": "content",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 4,
+          "name": "created_at",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": "CURRENT_TIMESTAMP",
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [
+        {
+          "id": 0,
+          "seq": 0,
+          "table": "assignments",
+          "from": "assignment_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "CASCADE",
+          "match": "NONE"
+        }
+      ],
+      "indexes": []
+    },
+    "assignments": {
+      "sql": "CREATE TABLE assignments (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            title TEXT NOT NULL,\n            course TEXT NOT NULL DEFAULT '',\n            description TEXT NOT NULL DEFAULT '',\n            due_date TEXT,\n            status TEXT NOT NULL DEFAULT 'todo' CHECK(status IN ('todo','doing','done')),\n            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP\n        , priority TEXT NOT NULL DEFAULT 'medium', owner_id INTEGER, auto_replan_enabled INTEGER NOT NULL DEFAULT 0, replan_pending INTEGER NOT NULL DEFAULT 0)",
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "title",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "course",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": "''",
+          "pk": 0
+        },
+        {
+          "cid": 3,
+          "name": "description",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": "''",
+          "pk": 0
+        },
+        {
+          "cid": 4,
+          "name": "due_date",
+          "type": "TEXT",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 5,
+          "name": "status",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": "'todo'",
+          "pk": 0
+        },
+        {
+          "cid": 6,
+          "name": "created_at",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": "CURRENT_TIMESTAMP",
+          "pk": 0
+        },
+        {
+          "cid": 7,
+          "name": "priority",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": "'medium'",
+          "pk": 0
+        },
+        {
+          "cid": 8,
+          "name": "owner_id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 9,
+          "name": "auto_replan_enabled",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": "0",
+          "pk": 0
+        },
+        {
+          "cid": 10,
+          "name": "replan_pending",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": "0",
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "seq": 0,
+          "name": "idx_assignments_owner",
+          "unique": 0,
+          "origin": "c",
+          "partial": 0
+        }
+      ]
+    },
+    "attachments": {
+      "sql": "CREATE TABLE attachments (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            assignment_id INTEGER NOT NULL,\n            stored_name TEXT NOT NULL UNIQUE,\n            original_name TEXT NOT NULL,\n            byte_size INTEGER NOT NULL,\n            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,\n            FOREIGN KEY(assignment_id) REFERENCES assignments(id) ON DELETE CASCADE\n        )",
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "assignment_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "stored_name",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 3,
+          "name": "original_name",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 4,
+          "name": "byte_size",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 5,
+          "name": "created_at",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": "CURRENT_TIMESTAMP",
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [
+        {
+          "id": 0,
+          "seq": 0,
+          "table": "assignments",
+          "from": "assignment_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "CASCADE",
+          "match": "NONE"
+        }
+      ],
+      "indexes": [
+        {
+          "seq": 0,
+          "name": "sqlite_autoindex_attachments_1",
+          "unique": 1,
+          "origin": "u",
+          "partial": 0
+        }
+      ]
+    },
+    "checklist_items": {
+      "sql": "CREATE TABLE checklist_items (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            assignment_id INTEGER NOT NULL,\n            content TEXT NOT NULL,\n            is_done INTEGER NOT NULL DEFAULT 0 CHECK(is_done IN (0,1)), focus_date TEXT,\n            FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE\n        )",
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "assignment_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "content",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 3,
+          "name": "is_done",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": "0",
+          "pk": 0
+        },
+        {
+          "cid": 4,
+          "name": "focus_date",
+          "type": "TEXT",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [
+        {
+          "id": 0,
+          "seq": 0,
+          "table": "assignments",
+          "from": "assignment_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "CASCADE",
+          "match": "NONE"
+        }
+      ],
+      "indexes": []
+    },
+    "study_plan": {
+      "sql": "CREATE TABLE study_plan (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            assignment_id INTEGER NOT NULL,\n            plan_date TEXT NOT NULL,\n            content TEXT NOT NULL,\n            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, is_manual INTEGER NOT NULL DEFAULT 0,\n            FOREIGN KEY(assignment_id) REFERENCES assignments(id) ON DELETE CASCADE\n        )",
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "assignment_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "plan_date",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 3,
+          "name": "content",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 4,
+          "name": "created_at",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": "CURRENT_TIMESTAMP",
+          "pk": 0
+        },
+        {
+          "cid": 5,
+          "name": "is_manual",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": "0",
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [
+        {
+          "id": 0,
+          "seq": 0,
+          "table": "assignments",
+          "from": "assignment_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "CASCADE",
+          "match": "NONE"
+        }
+      ],
+      "indexes": []
+    },
+    "users": {
+      "sql": "CREATE TABLE users (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            username TEXT NOT NULL UNIQUE,\n            password_hash TEXT NOT NULL,\n            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP\n        )",
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "username",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "password_hash",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 3,
+          "name": "created_at",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": "CURRENT_TIMESTAMP",
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "seq": 0,
+          "name": "sqlite_autoindex_users_1",
+          "unique": 1,
+          "origin": "u",
+          "partial": 0
+        }
+      ]
+    }
+  },
+  "routes": [
+    {
+      "path": "/",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "dashboard"
+    },
+    {
+      "path": "/ai/analyze",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "endpoint": "ai_analyze"
+    },
+    {
+      "path": "/ai/analyze-file",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "ai_analyze"
+    },
+    {
+      "path": "/ai/check-requirements",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "check_requirements"
+    },
+    {
+      "path": "/ai/save",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "ai_save"
+    },
+    {
+      "path": "/assignments",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "assignment_list"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "assignment_detail"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/attachments",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "add_attachment"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/attachments/<int:attachment_id>",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "download_attachment"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/attachments/<int:attachment_id>/delete",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "delete_attachment"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/auto-replan",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "toggle_auto_replan"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/checklist",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "add_checklist_item"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/checklist/<int:item_id>/delete",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "delete_checklist_item"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/checklist/<int:item_id>/edit",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "edit_checklist_item"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/checklist/<int:item_id>/focus",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "focus_task"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/checklist/<int:item_id>/toggle",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "toggle_checklist_item"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/delete",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "delete_assignment"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/edit",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "endpoint": "edit_assignment"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/notes",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "add_assignment_note"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/notes/<int:note_id>/delete",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "delete_assignment_note"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/notes/<int:note_id>/edit",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "edit_assignment_note"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/plan",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "make_study_plan"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/plan/<int:entry_id>/delete",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "delete_study_plan"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/plan/<int:entry_id>/edit",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "edit_study_plan"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/replan",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "retry_auto_replan"
+    },
+    {
+      "path": "/assignments/<int:assignment_id>/status",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "quick_status"
+    },
+    {
+      "path": "/assignments/new",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "endpoint": "new_assignment"
+    },
+    {
+      "path": "/auth/login",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "endpoint": "login"
+    },
+    {
+      "path": "/auth/logout",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "logout"
+    },
+    {
+      "path": "/auth/register",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "endpoint": "register"
+    },
+    {
+      "path": "/backup",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "backup_settings"
+    },
+    {
+      "path": "/backup/download",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "backup_download"
+    },
+    {
+      "path": "/backup/import",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "backup_restore"
+    },
+    {
+      "path": "/calendar",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "calendar_view"
+    },
+    {
+      "path": "/courses",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "courses"
+    },
+    {
+      "path": "/features",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "public_features"
+    },
+    {
+      "path": "/health",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "health"
+    },
+    {
+      "path": "/preview/<slug>",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "feature_preview"
+    },
+    {
+      "path": "/schedule",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "schedule_view"
+    },
+    {
+      "path": "/static/<path:filename>",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "static"
+    }
+  ]
+}
