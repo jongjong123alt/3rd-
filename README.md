@@ -78,3 +78,9 @@ GitHub Actions가 push 시 Python 문법 검사 및 `python -m unittest discover
 - [편집 가능한 draw.io 원본](docs/diagrams/assignment-system.drawio) · [7페이지 PDF](docs/diagrams/assignment-system.pdf)
 - [아키텍처](docs/ARCHITECTURE.md) · [화면 구성](docs/SCREEN_DESIGN.md) · [데이터 모델](docs/DATA_MODEL.md)
 - [실제 라우트 목록](docs/ROUTE_CATALOG.md) · [플로우차트 안내](docs/FLOWCHART.md)
+
+## 데모데이·최종 제출 준비
+
+[최종 제출 체크리스트](docs/DEMO_DAY_CHECKLIST.md) · [AI 기능 설명](docs/AI_FUNCTION.md) · [최신 검증 기록](docs/DEMO_DAY_VERIFICATION.md)
+
+제출 기한: 2026-11-30(월) 22:00(한국 시간), 카카오워크 수업 1:1 대화방. 2026-11-24 확인 기준 서비스는 미배포 상태입니다.
