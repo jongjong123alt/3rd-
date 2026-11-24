@@ -9,6 +9,7 @@
   <title>{% block title %}과제 노트{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/campus.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/ui.css') }}">
   {% if not signed_in %}<link rel="stylesheet" href="{{ url_for('static', filename='css/marketing.css') }}">{% endif %}
   <script src="{{ url_for('static', filename='js/campus.js') }}" defer></script>
 </head>
@@ -20,14 +21,14 @@
       <div class="sidebar-label">{{ '나의 캠퍼스' if signed_in else '서비스 미리보기' }}</div>
       <nav aria-label="{{ '워크스페이스' if signed_in else '서비스' }}">
       {% if signed_in %}
-        {% for endpoint, label, image in [('dashboard','대시보드','house-door'),('assignment_list','과제 관리','grid'),('ai_analyze','AI 공지 분석','stars'),('calendar_view','마감 달력','calendar3'),('schedule_view','일정 충돌','exclamation-triangle'),('courses','과목별 보기','journal-text'),('backup_settings','데이터 백업','file-earmark-text')] %}
+        {% for group, endpoint, label, image in [('main','dashboard','대시보드','house-door'),('main','assignment_list','과제 관리','grid'),('main','calendar_view','마감 달력','calendar3'),('main','schedule_view','일정 충돌','exclamation-triangle'),('main','courses','과목별 보기','journal-text'),('tools','ai_analyze','AI 공지 분석','stars'),('tools','backup_settings','데이터 백업','file-earmark-text')] %}
+        {% if group == 'tools' and loop.previtem and loop.previtem[0] == 'main' %}<p class="nav-group-label" aria-hidden="true">도구</p>{% endif %}
         {% set nav_active = request.endpoint == endpoint or (endpoint == 'assignment_list' and request.endpoint in ('new_assignment','assignment_detail','edit_assignment')) %}
         <a class="nav {{ 'active' if nav_active else '' }}" href="{{ url_for(endpoint) }}" {% if nav_active %}aria-current="page"{% endif %}>{{ icon(image) }}<span>{{ label }}</span></a>
         {% endfor %}
       {% endif %}
       </nav>
       <div class="sidebar-bottom">
-        <p class="sidebar-message">작은 완료가 쌓이는<br>나만의 한 학기.</p>
         {% if session.get('user_id') %}
         <div class="account-label">{{ icon('person-circle') }}<span>내 워크스페이스</span></div>
         <form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="logout-button">{{ icon('box-arrow-right') }} 로그아웃</button></form>
@@ -38,7 +39,7 @@
       {% if signed_in %}<header class="topbar">
         <button class="menu-toggle secondary-button" aria-label="메뉴 열기" aria-controls="site-sidebar" aria-expanded="false" type="button">{{ icon('list') }} 메뉴</button>
         <span class="breadcrumb">과제 노트 <span aria-hidden="true">/</span> {% block breadcrumb %}{{ '대시보드' if signed_in else '서비스 소개' }}{% endblock %}</span>
-        {% if not signed_in %}<div class="public-top-actions"><a href="{{ url_for('login') }}">로그인</a><a class="secondary-button" href="{{ url_for('register') }}">회원가입</a></div>{% else %}<span class="topbar-note">오늘도, 하나씩 차근차근.</span>{% endif %}
+        {% if not signed_in %}<div class="public-top-actions"><a href="{{ url_for('login') }}">로그인</a><a class="secondary-button" href="{{ url_for('register') }}">회원가입</a></div>{% endif %}
       </header>{% else %}
       <header class="marketing-header">
         <a class="marketing-brand" href="{{ url_for('dashboard') }}">{{ icon('journal-text', 'brand-icon') }} 과제 노트</a>

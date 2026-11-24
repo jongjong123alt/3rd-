@@ -23,7 +23,7 @@ const base = "http://127.0.0.1:5001";
   await p.waitForLoadState();
   await p.goto(base + "/");
   assert.match(
-    await p.locator(".focus-list").innerText(),
+    await p.locator(".today-list").first().innerText(),
     /자료 조사와 요구사항 정리/,
   );
   await p
