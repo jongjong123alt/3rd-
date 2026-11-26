@@ -22,7 +22,7 @@ Blueprint 대신 수동 Web Service를 만들면 다음 값을 사용한다.
 | `APP_DATA_DIR` | `/var/data` |
 | `FLASK_SECRET_KEY` | 고정된 긴 무작위 문자열, Blueprint는 자동 생성 |
 | `GEMINI_API_KEY` | 본인 Gemini 키 |
-| `GEMINI_MODEL` | `gemini-2.5-flash` |
+| `GEMINI_MODEL` | `gemini-3.5-flash-lite` |
 
 `FLASK_DEBUG`는 설정하지 않는다. 운영 모드는 시크릿이 없으면 시작을 거부하며 HTTPS용 Secure 세션 쿠키를 사용한다. 시크릿 변경 시 기존 로그인 세션은 무효화된다.
 

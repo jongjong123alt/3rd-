@@ -10,7 +10,7 @@ python -m pip install -r requirements.txt
 프로젝트 최상위 폴더(`app.py`와 같은 위치)에 `.env` 파일을 만든다.
 ```dotenv
 GEMINI_API_KEY=발급받은_실제_API_키
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.5-flash-lite
 ```
 - `.env.example`을 복사해 `.env`로 이름을 변경한 다음 입력해도 된다.
 - 키를 큰따옴표로 감쌀 필요는 없다.

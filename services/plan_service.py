@@ -5,6 +5,8 @@ import os
 from google import genai
 from google.genai import types
 
+from services.gemini_models import generate_content
+
 
 class PlanError(Exception):
     pass
@@ -54,8 +56,8 @@ def generate_study_plan(assignment, tasks, today=None):
     )
     try:
         with genai.Client(api_key=api_key, http_options=types.HttpOptions(timeout=20000)) as client:
-            response = client.models.generate_content(
-                model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+            response = generate_content(
+                client,
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",

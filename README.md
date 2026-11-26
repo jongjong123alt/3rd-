@@ -19,7 +19,7 @@ python app.py
 
 ```ini
 GEMINI_API_KEY=본인_Gemini_API_키
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.5-flash-lite
 FLASK_SECRET_KEY=본인이_생성한_랜덤_시크릿
 ```
 

@@ -14,7 +14,7 @@
 
 ## 구현 방식과 한계
 
-- 서버에서 `google-genai` SDK로 Gemini API를 호출한다. 기본 모델은 `gemini-2.5-flash`이며 환경변수로 변경할 수 있다.
+- 서버에서 `google-genai` SDK로 Gemini API를 호출한다. 기본 모델은 `gemini-3.5-flash-lite`이며 환경변수로 변경할 수 있다. 설정한 모델이 404(종료된 모델)를 돌려주면 `GEMINI_FALLBACK_MODELS`(기본: gemini-3.5-flash-lite, gemini-3.8-flash, gemini-3.5-flash) 순서로 한 번씩 다시 시도한다.
 - API 키는 서버 환경변수로 설정한다. 브라우저 코드와 저장소에는 키를 넣지 않는다.
 - 공지와 추가 요구사항을 구조화된 JSON 출력 지침과 함께 전달하고 응답 형식·날짜·문자 길이를 검사한다.
 - 파일이 있으면 텍스트와 함께 분석한다. 분석 원본 파일은 앱에 저장하지 않지만 입력 자료는 외부 Gemini API로 전송된다.

@@ -108,7 +108,7 @@
                    └─ HTTPS → Gemini
 ```
 
-`.env.example`에 필요한 변수 이름이 있고, `GEMINI_MODEL` 기본값은 `gemini-2.5-flash`이다. `FLASK_SECRET_KEY` 미설정 시 실행마다 임의 키를 생성하므로 프로세스 재시작 후 로그인 유지가 보장되지 않는다. `FLASK_DEBUG=1`일 때만 `python app.py`의 디버그 실행을 켠다.
+`.env.example`에 필요한 변수 이름이 있고, `GEMINI_MODEL` 기본값은 `gemini-3.5-flash-lite`이다. `FLASK_SECRET_KEY` 미설정 시 실행마다 임의 키를 생성하므로 프로세스 재시작 후 로그인 유지가 보장되지 않는다. `FLASK_DEBUG=1`일 때만 `python app.py`의 디버그 실행을 켠다.
 
 앱 시작 시 `CREATE TABLE IF NOT EXISTS`와 필요한 `ALTER TABLE`로 기존 DB를 확장한다. Alembic 같은 버전 관리 마이그레이션 시스템은 현재 없다. `instance/`와 `.env`는 Git에서 제외된다. ZIP 재설치 복원 시 먼저 로컬에서 계정을 생성하고 로그인한다.
 

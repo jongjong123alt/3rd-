@@ -13,6 +13,7 @@ from google import genai
 from google.genai import errors, types
 
 from services.analysis_guidelines import ANALYSIS_GUIDELINES
+from services.gemini_models import ModelConfigError, candidate_models, generate_content
 
 
 logger = logging.getLogger(__name__)
@@ -84,8 +85,9 @@ def analyze_notice(notice, requirements=""):
     if not api_key:
         raise GeminiAnalysisError("Gemini API 키가 없습니다. 프로젝트의 .env 파일을 확인해 주세요.")
 
-    model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
-    if not model_name or not all(ch.isalnum() or ch in "-_." for ch in model_name):
+    try:
+        candidate_models()
+    except ModelConfigError:
         raise GeminiAnalysisError("Gemini 모델 설정이 올바르지 않습니다.")
 
     prompt = (
@@ -112,8 +114,8 @@ def analyze_notice(notice, requirements=""):
                 ),
             ),
         ) as client:
-            response = client.models.generate_content(
-                model=model_name,
+            response = generate_content(
+                client,
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
@@ -151,7 +153,7 @@ def analyze_notice(notice, requirements=""):
         elif exc.code in (401, 403):
             message = "Gemini API 키 또는 사용 권한을 확인해 주세요."
         elif exc.code == 404:
-            message = "Gemini 모델을 찾을 수 없습니다. .env의 GEMINI_MODEL을 확인해 주세요."
+            message = "설정한 Gemini 모델과 대체 모델을 모두 찾을 수 없습니다(404). GEMINI_MODEL을 현재 제공되는 모델로 바꿔 주세요."
         else:
             message = "Gemini 분석 요청에 실패했습니다. 잠시 후 다시 시도해 주세요."
         raise GeminiAnalysisError(message) from exc
@@ -183,8 +185,9 @@ def analyze_document(document_bytes, mime_type, notice="", requirements=""):
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     if not api_key:
         raise GeminiAnalysisError("Gemini API 키가 없습니다. 프로젝트의 .env 파일을 확인해 주세요.")
-    model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
-    if not model_name or not all(ch.isalnum() or ch in "-_." for ch in model_name):
+    try:
+        candidate_models()
+    except ModelConfigError:
         raise GeminiAnalysisError("Gemini 모델 설정이 올바르지 않습니다.")
     prompt = (
         "역할: 대학 과제 공지 분석 도우미. 첨부된 PDF·이미지와 아래 사용자가 입력한 "
@@ -213,8 +216,8 @@ def analyze_document(document_bytes, mime_type, notice="", requirements=""):
                 ),
             ),
         ) as client:
-            response = client.models.generate_content(
-                model=model_name,
+            response = generate_content(
+                client,
                 contents=[types.Part.from_text(text=prompt),
                           types.Part.from_bytes(data=document_bytes, mime_type=mime_type)],
                 config=types.GenerateContentConfig(
@@ -251,7 +254,7 @@ def analyze_document(document_bytes, mime_type, notice="", requirements=""):
             message = ("Gemini가 첨부파일 분석 요청을 거부했습니다(400). "
                        "파일이 손상되었거나 현재 Gemini 모델이 파일 형식을 지원하지 않을 수 있습니다.")
         elif code == 404:
-            message = "Gemini 모델을 찾을 수 없습니다(404). .env의 GEMINI_MODEL을 확인해 주세요."
+            message = "설정한 Gemini 모델과 대체 모델을 모두 찾을 수 없습니다(404). GEMINI_MODEL을 현재 제공되는 모델로 바꿔 주세요."
         elif code == 413:
             message = "Gemini가 파일 크기를 허용하지 않았습니다(413). 더 작은 파일로 시도해 주세요."
         elif code == 429:
