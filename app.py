@@ -467,8 +467,8 @@ def create_app(test_config=None):
         else:
             with connect_db() as connection:
                 connection.execute(
-                    "INSERT INTO checklist_items (assignment_id, content) VALUES (?, ?)",
-                    (assignment_id, content),
+                    "INSERT INTO checklist_items (assignment_id, content, created_on) VALUES (?, ?, ?)",
+                    (assignment_id, content, date.today().isoformat()),
                 )
             flash("할 일이 추가되었습니다.", "success")
             maybe_auto_replan(connect_db, assignment_id, current_owner_id())
@@ -667,8 +667,8 @@ def create_app(test_config=None):
             )
             assignment_id = cursor.lastrowid
             connection.executemany(
-                "INSERT INTO checklist_items (assignment_id, content) VALUES (?, ?)",
-                [(assignment_id, item) for item in tasks],
+                "INSERT INTO checklist_items (assignment_id, content, created_on) VALUES (?, ?, ?)",
+                [(assignment_id, item, date.today().isoformat()) for item in tasks],
             )
         flash("검토한 AI 분석 결과가 과제와 체크리스트에 저장되었습니다.", "success")
         return redirect(url_for("assignment_detail", assignment_id=assignment_id))

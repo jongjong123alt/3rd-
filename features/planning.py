@@ -77,11 +77,12 @@ def dashboard_planning(connect_db, owner_id):
             "AND due_date<=? ORDER BY due_date, id LIMIT 30",
             (owner_id, last))]
         tasks = [dict(r) for r in db.execute(
-            "SELECT c.id, c.content, c.focus_date, a.id AS assignment_id, a.title FROM checklist_items c "
-            "JOIN assignments a ON a.id=c.assignment_id "
+            "SELECT c.id, c.content, c.focus_date, c.created_on, a.due_date, a.id AS assignment_id, a.title "
+            "FROM checklist_items c JOIN assignments a ON a.id=c.assignment_id "
             "WHERE a.owner_id IS ? AND a.status!='done' AND c.is_done=0 "
-            "AND (c.focus_date=? OR a.due_date=?) ORDER BY (c.focus_date=?) DESC, a.id, c.id",
-            (owner_id, today.isoformat(), today.isoformat(), today.isoformat()))]
+            "AND (c.focus_date=? OR a.due_date=? OR c.created_on=?) "
+            "ORDER BY (c.focus_date=?) DESC, a.id, c.id",
+            (owner_id, today.isoformat(), today.isoformat(), today.isoformat(), today.isoformat()))]
         plans = [dict(r) for r in db.execute(
             "SELECT p.content, p.assignment_id, a.title FROM study_plan p "
             "JOIN assignments a ON a.id=p.assignment_id "

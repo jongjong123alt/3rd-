@@ -8,6 +8,9 @@ def register_productivity(app, connect_db, get_assignment, owner_id, replan):
         columns = {r['name'] for r in db.execute('PRAGMA table_info(checklist_items)')}
         if 'focus_date' not in columns:
             db.execute('ALTER TABLE checklist_items ADD COLUMN focus_date TEXT')
+        if 'created_on' not in columns:
+            # Day the item was added (server date). Existing rows stay NULL.
+            db.execute('ALTER TABLE checklist_items ADD COLUMN created_on TEXT')
 
     @app.post('/assignments/<int:assignment_id>/checklist/<int:item_id>/focus')
     def focus_task(assignment_id, item_id):
@@ -24,7 +27,7 @@ def register_productivity(app, connect_db, get_assignment, owner_id, replan):
             selected = item['focus_date'] == date.today().isoformat()
             db.execute('UPDATE checklist_items SET focus_date=? WHERE id=?',
                        (None if selected else date.today().isoformat(), item_id))
-        flash('직접 지정을 해제했습니다. 오늘 마감인 작업은 계속 표시됩니다.' if selected else '오늘 할 일에 추가했습니다.', 'success')
+        flash('직접 지정을 해제했습니다. 오늘 추가했거나 오늘 마감인 작업은 계속 표시됩니다.' if selected else '오늘 할 일에 추가했습니다.', 'success')
         return redirect(url_for('dashboard') if request.form.get('return_to') == 'dashboard' else
                         url_for('assignment_detail', assignment_id=assignment_id)+'#checklist-title')
 

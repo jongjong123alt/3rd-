@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}대시보드 · 과제 노트{% endblock %}
 {% macro today_item(item) -%}
-<li class="today-row"><form method="post" action="{{ url_for('toggle_checklist_item', assignment_id=item.assignment_id, item_id=item.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="return_to" value="dashboard"><button class="check-toggle" type="submit" aria-label="오늘 할 일 완료: {{ item.content }}">{{ icon('square') }}</button></form><a href="{{ url_for('assignment_detail', assignment_id=item.assignment_id) }}#checklist-title"><strong>{{ item.content }}</strong><span>{{ item.title }} · {{ '직접 지정' if item.focus_date == ui_today.isoformat() else '체크리스트' }}</span></a></li>
+<li class="today-row"><form method="post" action="{{ url_for('toggle_checklist_item', assignment_id=item.assignment_id, item_id=item.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="return_to" value="dashboard"><button class="check-toggle" type="submit" aria-label="오늘 할 일 완료: {{ item.content }}">{{ icon('square') }}</button></form><a href="{{ url_for('assignment_detail', assignment_id=item.assignment_id) }}#checklist-title"><strong>{{ item.content }}</strong><span>{{ item.title }} · {{ '직접 지정' if item.focus_date == ui_today.isoformat() else '오늘 마감' if item.due_date == ui_today.isoformat() else '오늘 추가' if item.created_on == ui_today.isoformat() else '체크리스트' }}</span></a></li>
 {%- endmacro %}
 {% block content %}
 {% set today_count = planning.today_plans|length + planning.today_tasks|length %}
@@ -47,7 +47,7 @@
   <div class="tile-inner dash-grid">
     <div class="dash-main">
       <section aria-labelledby="today-heading">
-        <div class="dash-section-head"><h2 id="today-heading">오늘 할 일</h2><span class="muted">직접 지정 · 오늘 마감 · 학습 계획</span></div>
+        <div class="dash-section-head"><h2 id="today-heading">오늘 할 일</h2><span class="muted">오늘 추가 · 직접 지정 · 오늘 마감 · 학습 계획</span></div>
         {% if planning.today_plans or planning.today_tasks %}
         <ul class="today-list">
           {% for item in planning.today_tasks[:5] %}{{ today_item(item) }}{% endfor %}
@@ -56,7 +56,7 @@
         {% if planning.today_tasks|length > 5 %}<details class="today-work-more"><summary>나머지 {{ planning.today_tasks|length - 5 }}개 할 일 보기</summary><ul class="today-list">{% for item in planning.today_tasks[5:] %}{{ today_item(item) }}{% endfor %}</ul></details>{% endif %}
         {% if planning.today_plans|length > 3 %}<p class="muted dash-note">학습 계획은 3개까지 표시합니다. 각 과제에서 전체 계획을 확인하세요.</p>{% endif %}
         {% else %}
-        <div class="overview-empty">{{ icon('check-square') }}<div><h3>오늘 예정된 작업이 없어요.</h3><p>과제 상세에서 체크리스트 항목을 ‘오늘 할 일’로 지정하거나 학습 계획을 만들어 보세요.</p><a class="text-link" href="{{ url_for('assignment_list') }}">내 과제 확인하기 {{ icon('arrow-right') }}</a></div></div>
+        <div class="overview-empty">{{ icon('check-square') }}<div><h3>오늘 예정된 작업이 없어요.</h3><p>과제에 체크리스트를 추가하면 그날 바로 여기에 표시돼요. 다른 날의 항목은 과제 상세에서 ‘오늘 할 일’로 지정할 수 있어요.</p><a class="text-link" href="{{ url_for('assignment_list') }}">내 과제 확인하기 {{ icon('arrow-right') }}</a></div></div>
         {% endif %}
       </section>
 
