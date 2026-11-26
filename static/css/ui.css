@@ -984,3 +984,263 @@ h3 {
     transition: none !important;
   }
 }
+
+/* ---------- Screen-reader-only text ---------- */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Login / register ---------- */
+.auth-content.auth-shell,
+.public-site .auth-content.auth-shell {
+  max-width: 1040px;
+  margin: 48px auto 72px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--white);
+}
+.auth-story {
+  position: relative;
+  padding: 48px 44px;
+  color: #f3f6f2;
+  background-color: var(--forest);
+  /* notebook ruling, a quiet nod to the product name */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 31px,
+    rgba(255, 255, 255, 0.07) 31px,
+    rgba(255, 255, 255, 0.07) 32px
+  );
+  display: flex;
+  flex-direction: column;
+}
+.auth-story::before {
+  content: "";
+  position: absolute;
+  left: 28px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.16);
+}
+.auth-story-eyebrow {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(243, 246, 242, 0.75);
+}
+.auth-story-title {
+  margin: 0 0 32px;
+  font-size: 30px;
+  line-height: 1.3;
+  letter-spacing: -0.8px;
+  color: #fff;
+}
+.auth-story-list {
+  list-style: none;
+  margin: auto 0 0;
+  padding: 0;
+  display: grid;
+  gap: 18px;
+}
+.auth-story-list li {
+  display: grid;
+  gap: 3px;
+  padding-left: 16px;
+  border-left: 2px solid rgba(255, 255, 255, 0.35);
+}
+.auth-story-list strong {
+  font-size: 15px;
+  color: #fff;
+}
+.auth-story-list span {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: rgba(243, 246, 242, 0.82);
+}
+.auth-card {
+  padding: 48px 48px 40px;
+}
+.auth-eyebrow {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--forest);
+}
+.auth-card h1 {
+  margin: 6px 0 6px;
+  font-size: 30px;
+}
+.auth-card .intro {
+  margin: 0 0 24px;
+}
+.auth-card .form-errors {
+  margin-bottom: 16px;
+}
+.auth-form {
+  display: grid;
+  gap: 18px;
+  margin: 0;
+}
+.auth-field {
+  display: grid;
+  gap: 6px;
+}
+.auth-field label {
+  margin: 0;
+}
+.auth-password {
+  position: relative;
+}
+.auth-password input {
+  width: 100%;
+  padding-right: 72px;
+}
+.auth-reveal {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--forest);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.auth-reveal:hover {
+  background: var(--sage);
+}
+.auth-hint {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.auth-hint.is-error {
+  color: var(--danger);
+  font-weight: 600;
+}
+.auth-field input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+.auth-form .auth-submit,
+.auth-content .assignment-form > .auth-submit {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 6px;
+  font-size: 15px;
+}
+.auth-submit[aria-busy="true"] {
+  opacity: 0.8;
+  cursor: progress;
+}
+.auth-switch {
+  margin: 20px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.auth-switch a {
+  color: var(--forest);
+  font-weight: 700;
+}
+@media (max-width: 900px) {
+  .auth-content.auth-shell,
+  .public-site .auth-content.auth-shell {
+    grid-template-columns: minmax(0, 1fr);
+    margin: 24px auto 48px;
+  }
+  .auth-story {
+    padding: 32px;
+  }
+  .auth-story-list {
+    margin-top: 0;
+  }
+  .auth-card {
+    padding: 32px;
+  }
+}
+
+/* ---------- AI request progress (dots · rotating line · elapsed time) ---------- */
+.ai-progress {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+}
+.ai-progress[hidden] {
+  display: none;
+}
+.ai-progress-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  color: var(--ink);
+}
+.ai-progress-dots {
+  display: inline-flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.ai-progress-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--forest);
+  animation: ai-dot 1.2s ease-in-out infinite;
+}
+.ai-progress-dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.ai-progress-dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes ai-dot {
+  0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-3px); }
+}
+.ai-progress-msg {
+  font-weight: 600;
+}
+.ai-progress-time {
+  margin-left: 2px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.ai-progress-note {
+  margin: 6px 0 0 28px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.ai-progress.is-slow .ai-progress-dots i {
+  background: var(--warn);
+}
+.ai-progress.is-static .ai-progress-dots i {
+  animation: none;
+  opacity: 0.7;
+}
+button[aria-busy="true"] {
+  cursor: progress;
+}
+.assignment-form .ai-progress p.ai-progress-note,
+.ai-progress p.ai-progress-note {
+  margin: 6px 0 0 28px;
+}

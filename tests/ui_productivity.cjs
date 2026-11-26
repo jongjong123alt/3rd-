@@ -13,7 +13,7 @@ const base = "http://127.0.0.1:5001";
   await p.goto(base + "/auth/login");
   await p.locator("#username").fill("campus_test");
   await p.locator("#password").fill("browser-test-password");
-  await p.locator(".assignment-form button").click();
+  await p.locator(".assignment-form button[type=submit]").click();
   await p.waitForURL(base + "/");
   await p.goto(base + "/assignments/1");
   await p

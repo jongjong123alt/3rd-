@@ -3,13 +3,14 @@
 {% block breadcrumb %}AI 공지 분석{% endblock %}
 {% block content %}
 <script src="{{ url_for('static', filename='js/requirement_checks.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/ai_progress.js') }}" defer></script>
 <section class="content">
   <div class="page-icon">{{ icon('stars') }}</div>
   <h1>AI 과제 공지 통합 분석</h1>
   <p class="intro">공지문 텍스트와 PDF·이미지를 한 번에 분석할 수 있습니다. 둘 중 하나만 입력해도 되고, 둘 다 입력하면 Gemini가 내용을 함께 검토합니다.</p>
   <ol class="analysis-steps" aria-label="분석 과정"><li><strong>01</strong> 공지 입력</li><li><strong>02</strong> AI 통합 분석</li><li><strong>03</strong> 검토 후 저장</li></ol>
   <div class="note ai-key-note"><strong>분석 전 확인</strong><p>실제 분석에는 Gemini API 키 설정이 필요합니다. 분석 결과는 원문과 대조한 뒤 저장해 주세요.</p></div>
-  <form class="assignment-form" id="ai-analysis-form" method="post" enctype="multipart/form-data" action="{{ url_for('ai_analyze') }}">
+  <form class="assignment-form" id="ai-analysis-form" method="post" enctype="multipart/form-data" action="{{ url_for('ai_analyze') }}" data-ai-progress="analysis">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <label for="notice">과제 공지 원문 (텍스트 또는 파일 필수)</label>
     <textarea id="notice" name="notice" rows="9" maxlength="10000" placeholder="분석할 실제 공지문을 붙여넣으세요. 파일을 첨부한다면 비워 두어도 됩니다.">{{ notice }}</textarea>
@@ -33,14 +34,13 @@
       <p class="muted">원문에 없는 정보는 확인이 필요합니다. 요약은 2,000자, 제출물·할 일은 각각 30개 이내입니다. 웹 검색·실제 파일 생성·자동 제출은 이 분석 화면에서 지원하지 않습니다. 조건이 충돌하면 분량이나 요청을 조정해 주세요.</p>
     </details>
     <div class="form-actions"><button class="primary-button" id="ai-submit-button" type="submit">공지문·파일 함께 AI 분석하기</button></div>
-    <p class="muted" id="ai-loading-status" role="status" aria-live="polite" hidden>AI가 입력한 공지와 파일을 함께 분석하고 있습니다. 잠시 기다려 주세요.</p>
+    <div class="ai-progress" id="ai-loading-status" hidden></div>
   </form>
   <script>
   (() => {
     const form = document.getElementById('ai-analysis-form');
     const button = document.getElementById('ai-submit-button');
-    const status = document.getElementById('ai-loading-status');
-    if (!form || !button || !status) return;
+    if (!form || !button) return;
     form.addEventListener('submit', event => {
       if (!form.checkValidity()) return;
       const notice = document.getElementById('notice').value.trim();
@@ -51,10 +51,7 @@
         document.getElementById('notice').reportValidity();
         return;
       }
-      if (button.disabled) { event.preventDefault(); return; }
-      button.disabled = true;
-      button.textContent = '통합 분석 중...';
-      status.hidden = false;
+      // Progress display and duplicate-submit guard: static/js/ai_progress.js
     });
     document.getElementById('notice').addEventListener('input', () => {
       document.getElementById('notice').setCustomValidity('');
