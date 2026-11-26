@@ -14,6 +14,23 @@ def _payload():
 
 
 class ModelFallbackTests(unittest.TestCase):
+    def setUp(self):
+        gemini_models._working.clear()
+
+    def tearDown(self):
+        gemini_models._working.clear()
+
+    def test_working_fallback_is_remembered(self):
+        client = MagicMock()
+        ok = MagicMock(text=_payload(), candidates=[])
+        client.models.generate_content.side_effect = [errors.APIError(404, {}), ok, ok]
+        sdk = MagicMock(); sdk.__enter__.return_value = client
+        env = {"GEMINI_API_KEY": "k", "GEMINI_MODEL": "gemini-2.5-flash", "GEMINI_FALLBACK_MODELS": "gemini-3.5-flash-lite"}
+        with patch.dict("os.environ", env), patch("services.gemini_service.genai.Client", return_value=sdk):
+            analyze_notice("공지 하나")
+            analyze_notice("공지 둘")
+        used = [c.kwargs["model"] for c in client.models.generate_content.call_args_list]
+        self.assertEqual(used, ["gemini-2.5-flash", "gemini-3.5-flash-lite", "gemini-3.5-flash-lite"])
     def test_candidates_start_with_configured_model_and_dedupe(self):
         with patch.dict("os.environ", {"GEMINI_MODEL": "gemini-3.5-flash-lite"}, clear=False):
             models = gemini_models.candidate_models()

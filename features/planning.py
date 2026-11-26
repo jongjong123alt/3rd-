@@ -1,8 +1,12 @@
 """F-13/14/15: in-app alerts, AI plans and deadline conflict view."""
 from collections import defaultdict
 from datetime import date, timedelta
-from flask import abort, flash, redirect, render_template, request, url_for
+import logging
+import threading
+from flask import abort, current_app, flash, redirect, render_template, request, url_for
 from services.plan_service import generate_study_plan, PlanError
+
+logger = logging.getLogger(__name__)
 
 
 def init_planning_db(connect_db):
@@ -18,29 +22,33 @@ def init_planning_db(connect_db):
         columns = {r["name"] for r in db.execute("PRAGMA table_info(study_plan)")}
         if "is_manual" not in columns:
             db.execute("ALTER TABLE study_plan ADD COLUMN is_manual INTEGER NOT NULL DEFAULT 0")
+        # A replan cannot survive a restart: show it as "needs retry" instead.
+        assignment_columns = {r["name"] for r in db.execute("PRAGMA table_info(assignments)")}
+        if "replan_pending" in assignment_columns:
+            db.execute("UPDATE assignments SET replan_pending=1 WHERE replan_pending=2")
 
 
-def maybe_auto_replan(connect_db, assignment_id, owner_id):
-    """F-21: replan after relevant edits, only when explicitly enabled.
+# replan_pending: 0 = up to date, 1 = needs retry (last attempt failed or was
+# skipped), 2 = a background replan is running.
+_replan_lock = threading.Lock()
+_replan_state = {}  # assignment_id -> {"running": bool, "again": bool}
 
-    Keep the existing AI plan if the Gemini call fails, and always preserve
-    entries the user has manually edited. The POST waits for Gemini to finish.
-    """
+
+def _replan_once(connect_db, assignment_id, owner_id):
+    """One Gemini replan. Returns (ok, message). Never touches Flask state."""
     with connect_db() as db:
         assignment = db.execute(
             "SELECT * FROM assignments WHERE id=? AND owner_id IS ?",
             (assignment_id, owner_id)).fetchone()
         if assignment is None or not assignment["auto_replan_enabled"]:
-            return False
-        db.execute("UPDATE assignments SET replan_pending=1 WHERE id=?", (assignment_id,))
+            return False, ""
         if assignment["status"] == "done" or not assignment["due_date"]:
-            flash("자동 재계획 대기: 미완료 과제에 제출기한을 지정해 주세요.", "error")
-            return False
+            db.execute("UPDATE assignments SET replan_pending=1 WHERE id=?", (assignment_id,))
+            return False, "자동 재계획 대기: 미완료 과제에 제출기한을 지정해 주세요."
         today = date.today()
-        due = date.fromisoformat(assignment["due_date"])
-        if due < today:
-            flash("자동 재계획 대기: 이미 마감된 과제입니다.", "error")
-            return False
+        if date.fromisoformat(assignment["due_date"]) < today:
+            db.execute("UPDATE assignments SET replan_pending=1 WHERE id=?", (assignment_id,))
+            return False, "자동 재계획 대기: 이미 마감된 과제입니다."
         tasks = [r["content"] for r in db.execute(
             "SELECT content FROM checklist_items WHERE assignment_id=? AND is_done=0 ORDER BY id",
             (assignment_id,))]
@@ -48,22 +56,94 @@ def maybe_auto_replan(connect_db, assignment_id, owner_id):
     try:
         entries = generate_study_plan(snapshot, tasks, today)
     except PlanError as exc:
-        flash("자동 재계획 실패: " + str(exc) + " 기존 일정은 유지됩니다.", "error")
-        return False
+        with connect_db() as db:
+            db.execute("UPDATE assignments SET replan_pending=1 WHERE id=?", (assignment_id,))
+        return False, "자동 재계획 실패: " + str(exc) + " 기존 일정은 유지됩니다."
     with connect_db() as db:
         current = db.execute(
             "SELECT due_date, status, auto_replan_enabled FROM assignments "
             "WHERE id=? AND owner_id IS ?", (assignment_id, owner_id)).fetchone()
         if (current is None or not current["auto_replan_enabled"] or
                 current["due_date"] != snapshot["due_date"] or current["status"] != snapshot["status"]):
-            return False
+            return False, ""
         db.execute("DELETE FROM study_plan WHERE assignment_id=? AND is_manual=0", (assignment_id,))
         db.executemany(
             "INSERT INTO study_plan (assignment_id, plan_date, content, is_manual) VALUES (?,?,?,0)",
             [(assignment_id, entry["date"], entry["task"]) for entry in entries],
         )
         db.execute("UPDATE assignments SET replan_pending=0 WHERE id=?", (assignment_id,))
-    flash("Gemini가 변경된 과제에 맞춰 AI 일정을 자동 갱신했습니다. 직접 수정한 일정은 유지됩니다.", "success")
+    return True, "Gemini가 변경된 과제에 맞춰 AI 일정을 자동 갱신했습니다. 직접 수정한 일정은 유지됩니다."
+
+
+def _replan_worker(connect_db, assignment_id, owner_id, result):
+    """Runs replans until no newer edit is waiting (rapid edits coalesce)."""
+    try:
+        while True:
+            try:
+                result["ok"], result["message"] = _replan_once(connect_db, assignment_id, owner_id)
+            except Exception:  # keep the existing plan; mark for retry
+                logger.exception("auto replan failed for assignment %s", assignment_id)
+                with connect_db() as db:
+                    db.execute("UPDATE assignments SET replan_pending=1 WHERE id=?", (assignment_id,))
+                result["ok"], result["message"] = False, "자동 재계획 실패: 잠시 후 다시 시도해 주세요. 기존 일정은 유지됩니다."
+            with _replan_lock:
+                state = _replan_state[assignment_id]
+                if state["again"]:
+                    state["again"] = False
+                    continue
+                del _replan_state[assignment_id]
+                return
+    except Exception:
+        with _replan_lock:
+            _replan_state.pop(assignment_id, None)
+        raise
+
+
+def maybe_auto_replan(connect_db, assignment_id, owner_id):
+    """F-21: replan after relevant edits, only when explicitly enabled.
+
+    The Gemini call runs in a background thread so checklist and assignment
+    edits return immediately. A failed call keeps the existing plan and
+    marks the assignment for retry; manually edited entries are preserved.
+    With AUTO_REPLAN_WAIT (default in tests) the request waits for the same
+    worker to finish.
+    """
+    with connect_db() as db:
+        assignment = db.execute(
+            "SELECT auto_replan_enabled, status, due_date FROM assignments WHERE id=? AND owner_id IS ?",
+            (assignment_id, owner_id)).fetchone()
+        if assignment is None or not assignment["auto_replan_enabled"]:
+            return False
+        blocked = None
+        if assignment["status"] == "done" or not assignment["due_date"]:
+            blocked = "자동 재계획 대기: 미완료 과제에 제출기한을 지정해 주세요."
+        elif date.fromisoformat(assignment["due_date"]) < date.today():
+            blocked = "자동 재계획 대기: 이미 마감된 과제입니다."
+        if blocked:
+            db.execute("UPDATE assignments SET replan_pending=1 WHERE id=?", (assignment_id,))
+            flash(blocked, "error")
+            return False
+        db.execute("UPDATE assignments SET replan_pending=2 WHERE id=?", (assignment_id,))
+    wait = current_app.config.get("AUTO_REPLAN_WAIT", current_app.testing)
+    with _replan_lock:
+        state = _replan_state.get(assignment_id)
+        if state is not None:  # a replan is running: run once more after it
+            state["again"] = True
+            start = False
+        else:
+            _replan_state[assignment_id] = {"running": True, "again": False}
+            start = True
+    result = {"ok": False, "message": ""}
+    if start:
+        worker = threading.Thread(target=_replan_worker, args=(connect_db, assignment_id, owner_id, result),
+                                  name=f"replan-{assignment_id}", daemon=True)
+        worker.start()
+        if wait:
+            worker.join()
+            if result["message"]:
+                flash(result["message"], "success" if result["ok"] else "error")
+            return result["ok"]
+    flash("AI가 바뀐 내용에 맞춰 일정을 다시 계획하고 있어요. 잠시 후 과제 상세에서 확인할 수 있어요.", "success")
     return True
 
 

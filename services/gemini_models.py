@@ -19,6 +19,11 @@ DEFAULT_MODEL = "gemini-3.5-flash-lite"
 DEFAULT_FALLBACKS = ("gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.5-flash")
 
 
+# configured model -> model that answered after it returned 404 (process-local),
+# so later calls skip the known-retired model instead of paying a 404 each time.
+_working = {}
+
+
 class ModelConfigError(ValueError):
     """GEMINI_MODEL / GEMINI_FALLBACK_MODELS contains an invalid name."""
 
@@ -45,9 +50,15 @@ def candidate_models():
 def generate_content(client, **kwargs):
     """client.models.generate_content with retired-model fallback (404 only)."""
     models = candidate_models()
+    known = _working.get(models[0])
+    if known in models:
+        models = [known] + [m for m in models if m != known]
     for i, name in enumerate(models):
         try:
-            return client.models.generate_content(model=name, **kwargs)
+            response = client.models.generate_content(model=name, **kwargs)
+            if i > 0:
+                _working[candidate_models()[0]] = name
+            return response
         except errors.APIError as exc:
             if getattr(exc, "code", None) == 404 and i + 1 < len(models):
                 logger.warning("Gemini model %s unavailable (404); trying %s", name, models[i + 1])
